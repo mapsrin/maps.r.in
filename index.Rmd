@@ -1,0 +1,9 @@
+---
+title: "Maps R In"
+output:
+  html_document:
+    includes:
+      in_header: cover.html
+---
+
+## This is the website of Maps R In

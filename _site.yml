@@ -1,0 +1,20 @@
+name: "Maps R In"                                  # CHANGE HERE 
+output_dir: "."
+navbar:
+  title: "Maps R In"    
+  left:
+    - text: "About"
+      icon: fa-user
+      href: about.html  
+    - text: "Blog"
+      icon: fa-rss
+      href: https://mapsrin.github.io/main/blog.html    # CHANGE HERE
+  right:
+    - icon: fa-envelope-o
+      href: mailto:mapsrin@gmail.com                      # CHANGE HERE 
+    - icon: fa-github
+      href: https://github.com/mapsrin/main         # CHANGE HERE 
+output:
+  html_document:
+    theme: cosmo
+    highlight: textmate
