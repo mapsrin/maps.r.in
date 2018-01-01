@@ -1,19 +1,19 @@
-name: "Maps R In"                                  # CHANGE HERE 
+name: "Maps R In"
 output_dir: "."
 navbar:
-  title: "Maps R In"    
+  title: "Maps R In"
   left:
     - text: "About"
       icon: fa-user
-      href: about.html  
+      href: about.html
     - text: "Blog"
       icon: fa-rss
       href: blog.html
   right:
     - icon: fa-envelope-o
-      href: mailto:mapsrin@gmail.com                      # CHANGE HERE 
+      href: mailto:mapsrin@gmail.com
     - icon: fa-github
-      href: https://github.com/mapsrin/maps.r.in         # CHANGE HERE 
+      href: https://github.com/mapsrin/maps.r.in
 output:
   html_document:
     theme: cosmo
