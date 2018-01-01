@@ -8,12 +8,12 @@ navbar:
       href: about.html  
     - text: "Blog"
       icon: fa-rss
-      href: https://mapsrin.github.io/main/blog.html    # CHANGE HERE
+      href: blog.html
   right:
     - icon: fa-envelope-o
       href: mailto:mapsrin@gmail.com                      # CHANGE HERE 
     - icon: fa-github
-      href: https://github.com/mapsrin/main         # CHANGE HERE 
+      href: https://github.com/mapsrin/maps.r.in         # CHANGE HERE 
 output:
   html_document:
     theme: cosmo
