@@ -10,3 +10,4 @@ output:
 
 ##[States of India](statesofindia.html)
 ##[Districts of India](districtsofindia.html)
+##[Parliament Constituencies of India](parliamentconstituencies.html)

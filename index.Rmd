@@ -1,5 +1,4 @@
 ---
-title: "Maps R In"
 output: html_document
 ---
 
@@ -24,7 +23,7 @@ library("raster")
 
 ```{r echo=FALSE, warning=F}
 map <- leaflet(width = "100%", height = 600)  %>% 
-  addProviderTiles("Esri") %>% 
+  addProviderTiles("Esri", options = tileOptions(minZoom=4, maxZoom=8)) %>% 
   addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
   addScaleBar() %>%
   addSimpleGraticule(showOriginLabel = TRUE) %>%
