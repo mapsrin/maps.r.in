@@ -6,6 +6,8 @@ output: html_document
 <style>
     body .main-container {
         max-width: 100%;
+        padding: 0;
+        margin: 0;
     }
 </style>
 
@@ -43,9 +45,11 @@ colors4 <- c("#33FF00", "#001AFF", "#FF9900", "#FF004D", "#FF4D00")
 parliamentconstituencies[["ColourIndex"]] <- colors
 ```
 
+## {.tabset .tabset-fade}
+### Map
 
 ```{r, echo=FALSE, warning=F}
-map <- leaflet(width = "100%", height = 600) %>% 
+map <- leaflet(width = "100%") %>% 
   addProviderTiles("Esri") %>% 
   addPolygons(data = parliamentconstituencies, 
               color = "#000000", 
@@ -58,11 +62,16 @@ map <- leaflet(width = "100%", height = 600) %>%
               popup = paste0("<strong>District: </strong>",
                              parliamentconstituencies$PC_NAME,
                              "<br><strong>State: </strong>",
-                             parliamentconstituencies$ST_NM)) %>%
+                             parliamentconstituencies$ST_NAME)) %>%
   addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
   addScaleBar() %>%
   addSimpleGraticule(showOriginLabel = TRUE)
 map
 ```
 
+### Data
+
+```{r}
+print(parliamentconstituencies$PC_NAME)
+```
 

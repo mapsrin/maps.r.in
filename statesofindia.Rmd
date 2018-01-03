@@ -6,6 +6,8 @@ output: html_document
 <style>
     body .main-container {
         max-width: 100%;
+        padding: 0;
+        margin: 0;
     }
 </style>
 
@@ -32,9 +34,11 @@ colors4 <- c("#3300FF", "#CCFF00", "#00B3FF", "#FF0000")
 states[["ColourIndex"]] <- colourIndex
 ```
 
+## {.tabset .tabset-fade}
+### Map 
 
 ```{r, echo=FALSE, warning=F}
-map <- leaflet(width = "100%", height = 600) %>% 
+map <- leaflet(width = "100%") %>% 
   addProviderTiles("Esri") %>% 
   addPolygons(data = states, 
               color = "#000000", 
@@ -55,3 +59,8 @@ map
 ```
 
 
+### Data
+
+```{r}
+print(states$ST_NM)
+```
