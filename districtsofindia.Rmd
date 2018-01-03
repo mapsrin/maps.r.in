@@ -1,20 +1,20 @@
 ---
 title: "Districts of India"
-output:
-  html_document:
-    toc: true
-    toc_float:
-      collapsed: false
-      smooth_scroll: false
+output: html_document
 ---
+
+<style>
+    body .main-container {
+        max-width: 100%;
+    }
+</style>
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-## Districts of India
 
-```{r, echo=FALSE, message=F, warning=F, quietly=TRUE}
+```{r, echo=FALSE, message=F, warning=F, results = 'hide'}
 library("leaflet")
 library("rgdal")
 library("ggmap")
@@ -53,7 +53,7 @@ districts[["ColourIndex"]] <- colors
 
 
 ```{r, echo=FALSE, warning=F}
-map <- leaflet() %>% 
+map <- leaflet(width = "100%", height = 600) %>% 
   addProviderTiles("Esri") %>% 
   addPolygons(data = districts, 
               color = "#000000", 

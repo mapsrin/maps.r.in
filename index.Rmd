@@ -1,9 +1,35 @@
 ---
 title: "Maps R In"
-output:
-  html_document:
-    includes:
-      in_header: cover.html
+output: html_document
 ---
 
-## This is the website of Maps R In
+
+<style>
+    body .main-container {
+        max-width: 100%;
+    }
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r, echo=FALSE, message=F, warning=F, results = 'hide'}
+library("leaflet")
+library("rgdal")
+library("ggmap")
+library("raster")
+```
+
+
+```{r echo=FALSE, warning=F}
+map <- leaflet(width = "100%", height = 600)  %>% 
+  addProviderTiles("Esri") %>% 
+  addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
+  addScaleBar() %>%
+  addSimpleGraticule(showOriginLabel = TRUE) %>%
+  setView(lng = 82.5, lat = 21, 4)
+map
+```
+
+##A collection of maps 
