@@ -1,5 +1,4 @@
 ---
-title: "Parliament Constituencies of India"
 output: html_document
 ---
 
@@ -23,7 +22,7 @@ library("ggmap")
 library("raster")
 library("htmlwidgets")
 
-parliamentconstituencies <- readOGR("IndiaAdminUnits/ParliamentaryConstituencies_2014.shp")
+parliamentconstituencies <- readOGR("data/IndiaAdminUnits/ParliamentaryConstituencies_2014.shp")
 colors <- c(1,3,1,1,4,2,3,2,2,3,3,3,2,4,4,1,3,3,1,4,2,5,3,1,2,3,4,1,2,3,2,1,4,2,3,4,3,
 4,2,4,4,4,1,2,4,1,4,3,3,2,2,1,3,2,2,1,3,3,1,4,3,3,1,4,2,2,1,2,1,1,4,2,3,3,
 3,4,4,3,2,2,3,1,4,3,1,4,1,1,3,1,3,2,3,3,1,4,4,2,1,2,4,1,3,1,2,1,3,4,1,4,4,
@@ -45,8 +44,8 @@ colors4 <- c("#33FF00", "#001AFF", "#FF9900", "#FF004D", "#FF4D00")
 parliamentconstituencies[["ColourIndex"]] <- colors
 ```
 
-## {.tabset .tabset-fade}
-### Map
+## {.tabset}
+### Parliament Constituencies of India
 
 ```{r, echo=FALSE, warning=F}
 map <- leaflet(width = "100%") %>% 
@@ -72,6 +71,12 @@ map
 ### Data
 
 ```{r}
-print(parliamentconstituencies$PC_NAME)
+library(DT)
+datatable(parliamentconstituencies@data, options = list(pageLength = 5))
 ```
 
+### Info
+
+Shape files from:
+Demo of 4 colour theorem
+Some anomalies clearly visible
