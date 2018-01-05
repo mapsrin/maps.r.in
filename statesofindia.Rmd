@@ -61,7 +61,7 @@ map
 
 ```{r}
 library(DT)
-datatable(states@data, options = list(pageLength = 5))
+datatable(states@data, options = list(pageLength = 100))
 ```
 
 ### Info

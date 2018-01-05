@@ -72,7 +72,7 @@ map
 
 ```{r}
 library(DT)
-datatable(parliamentconstituencies@data, options = list(pageLength = 5))
+datatable(parliamentconstituencies@data, options = list(pageLength = 100))
 ```
 
 ### Info

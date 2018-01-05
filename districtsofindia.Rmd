@@ -80,7 +80,7 @@ map
 
 ```{r}
 library(DT)
-datatable(districts@data, options = list(pageLength = 5))
+datatable(districts@data, options = list(pageLength = 100))
 ```
 
 ### Info

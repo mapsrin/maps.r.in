@@ -1,0 +1,55 @@
+---
+output: html_document
+---
+
+<style>
+    body .main-container {
+        max-width: 100%;
+        padding: 0;
+        margin: 0;
+    }
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+```{r, echo=FALSE, message=F, warning=F, results = 'hide'}
+library("leaflet")
+library("rgdal")
+library("ggmap")
+library("raster")
+library("sp")
+library("htmlwidgets")
+
+railnet <- geojsonio::geojson_read("data/Transportation/trains.json", what = "sp")
+```
+
+## {.tabset}
+### Railway Network of India
+
+```{r, echo=FALSE, warning=F}
+map <- leaflet(width = "100%") %>% 
+  addProviderTiles("Esri") %>% 
+  addPolylines(data = railnet, 
+              color = "#010101", 
+              weight = 1,
+              opacity = 1.0,
+              label = railnet$name,
+              group = "trains") %>%
+  addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
+  addScaleBar() %>%
+  addSimpleGraticule(showOriginLabel = TRUE)
+map
+```
+
+### Data
+
+```{r}
+library(DT)
+datatable(railnet@data, options = list(pageLength = 100))
+```
+
+### Info
+

@@ -1,0 +1,90 @@
+---
+output: html_document
+---
+
+<style>
+    body .main-container {
+        max-width: 100%;
+        padding: 0;
+        margin: 0;
+    }
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+```{r, echo=FALSE, message=F, warning=F, results = 'hide'}
+library("leaflet")
+library("rgdal")
+library("ggmap")
+library("raster")
+library("sp")
+library("htmlwidgets")
+
+airports <- read.csv("data/Transportation/world-airports.csv", header = T)
+indianairports <- airports[airports$iso_country == "IN" & 
+                           airports$type != "heliport" &
+                           airports$type != "closed",]
+indianheliports <- airports[airports$iso_country == "IN" & 
+                           airports$type == "heliport",]
+indianclosedairports <- airports[airports$iso_country == "IN" & 
+                           airports$type == "closed" &
+                           !grepl("Erase Me", airports$name),]
+```
+
+## {.tabset}
+### Airports in India
+
+```{r, echo=FALSE, warning=F}
+map <- leaflet(width = "100%") %>% 
+  addProviderTiles("Esri") %>%
+  addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
+  addScaleBar() %>%
+  addSimpleGraticule(showOriginLabel = TRUE) %>%
+  addAwesomeMarkers(lat = indianairports$latitude_deg, lng = indianairports$longitude_deg,
+             label = paste(indianairports$name , " ", indianairports$locaion),
+             icon = awesomeIcons(library = 'ion',icon = 'ios-paperplane'),
+             clusterId = indianairports$iso_region,
+             group = "Working Airports",
+             clusterOptions = markerClusterOptions(),
+             popup = paste0("<strong>Airport Name: </strong>",
+                             indianairports$name,
+                             "<br><strong>IATA code: </strong>",
+                             indianairports$iata_code)) %>%
+  addAwesomeMarkers(lat = indianheliports$latitude_deg, lng = indianheliports$longitude_deg,
+             label = paste(indianheliports$name , " ", indianheliports$locaion),
+             icon = awesomeIcons(library = 'ion',icon = 'ios-paperplane'),
+             clusterId = indianheliports$iso_region,
+             group = "Heliports",
+             clusterOptions = markerClusterOptions(),
+             popup = paste0("<strong>Airport Name: </strong>",
+                             indianheliports$name)) %>%
+  addAwesomeMarkers(lat = indianclosedairports$latitude_deg, lng = indianclosedairports$longitude_deg,
+             label = paste(indianclosedairports$name , " ", indianclosedairports$locaion),
+             icon = awesomeIcons(library = 'ion',icon = 'ios-paperplane'),
+             clusterId = indianclosedairports$iso_region,
+             group = "Closed Airports",
+             clusterOptions = markerClusterOptions(),
+             popup = paste0("<strong>Airport Name: </strong>",
+                             indianclosedairports$name)) %>%
+  addLayersControl(
+    overlayGroups = c("Working Airports", "Heliports", "Closed Airports"),
+    options = layersControlOptions(collapsed = FALSE)
+  )
+map
+```
+
+### Data
+
+```{r, echo=FALSE, warning=F}
+library(DT)
+toprint <- airports[airports$iso_country == "IN" & 
+                           !grepl("Erase Me", airports$name),]
+toprint <- toprint[complete.cases(toprint[ , 4]), c(4, 14, 3, 7, 11, 16, 17)]
+datatable(data.frame(toprint), rownames = F, colnames = c("Name", "IATA code", "Type", "Elevation in ft", "Location", "Website", "Wiki"), options = list(pageLength = 100))
+```
+
+### Info
+Data source: OurAirports.org
