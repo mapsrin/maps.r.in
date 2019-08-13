@@ -1,5 +1,10 @@
 ---
-output: html_document
+output:
+  html_document:
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
 ---
 
 <style>
@@ -21,12 +26,11 @@ library("ggmap")
 library("raster")
 ```
 
-## {.tabset}
 ### What should we map today?
 
 ```{r echo=FALSE, warning=F}
-map <- leaflet(width = "100%")  %>% 
-  addProviderTiles("Esri", options = tileOptions(minZoom=3, maxZoom=8)) %>% 
+map <- leaflet(width = "100%")  %>%  
+  addProviderTiles(providers$Stamen.Terrain, options = tileOptions(minZoom=3, maxZoom=8)) %>% 
   addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
   addScaleBar() %>%
   addSimpleGraticule(showOriginLabel = TRUE) %>%
@@ -34,6 +38,10 @@ map <- leaflet(width = "100%")  %>%
 map
 ```
 
-### Data
-
-### Info
+##[Home](index.html)
+##[States of India](statesofindia.html)
+##[Districts of India](districtsofindia.html)
+##[Parliament Constituencies of India](parliamentconstituencies.html)
+##[India Rail Network](indianrailwaynetwork.html)
+##[Airports in India](indianairports.html)
+##[Statewise Gender Ratio](indiastatesgenderratio.html)

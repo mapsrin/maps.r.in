@@ -17,6 +17,7 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ```{r, echo=FALSE, message=F, warning=F, results = 'hide'}
 library("leaflet")
+library("leaflet.minicharts")
 library("rgdal")
 library("rvest")
 library("tidyverse")
@@ -33,28 +34,37 @@ ratio <- url %>%
   html_nodes(xpath = '//*[@id="mw-content-text"]/div/table[2]') %>%
   html_table()
 ratio <- ratio[[1]][-1,]
-ratio <- ratio[-c(1,4:10)]
+ratio <- ratio[-c(1,4,6:10)]
 row.names(ratio) <- NULL
 names(ratio)[1] <- "State Name"
-puducherry <- ratio[2,2]
+puducherry2011 <- ratio[2,2]
 ratio[2,2] = "NA"
-damandiu <- ratio[36,2]
+damandiu2011 <- ratio[36,2]
 ratio[36,2] = "NA"
-dadranagarhaveli <- ratio[35,2]
+dadranagarhaveli2011 <- ratio[35,2]
 ratio[35,2] = "NA"
-chandigarh <- ratio[34,2]
+chandigarh2011 <- ratio[34,2]
 ratio[34,2] = "NA"
+puducherry2001 <- ratio[2,3]
+ratio[2,3] = "NA"
+damandiu2001 <- ratio[36,3]
+ratio[36,3] = "NA"
+dadranagarhaveli2001 <- ratio[35,3]
+ratio[35,3] = "NA"
+chandigarh2001 <- ratio[34,3]
+ratio[34,3] = "NA"
 ratio$`2011 Census` <- as.integer(ratio$`2011 Census`)
+ratio$`2001 Census` <- as.integer(ratio$`2001 Census`)
 ratio$`State Name`[33] = "NCT of Delhi"
 ratio <- ratio[order(ratio[1]),]
 states <- states[order(states$ST_NM),]
 states[["Ratio 2011"]] <- ratio[2]
-
+states[["Ratio 2001"]] <- ratio[3]
 
 pal <- colorNumeric(
   palette = "YlOrRd",
   reverse = TRUE,
-  domain = ratio$`2011 Census`
+  domain = c(ratio$`2011 Census`,ratio$`2001 Census`)
 )
 
 ```
@@ -64,6 +74,7 @@ pal <- colorNumeric(
 
 ```{r, echo=FALSE, warning=F}
 #addLegend_decreasing lifted from: https://github.com/rstudio/leaflet/issues/256#issuecomment-440290201
+
 addLegend_decreasing <- function (map, position = c("topright", "bottomright", "bottomleft", 
 			    "topleft"), pal, values, na.label = "NA", bins = 7, colors, 
 		  opacity = 0.5, labels = NULL, labFormat = labelFormat(), 
@@ -168,25 +179,42 @@ addLegend_decreasing <- function (map, position = c("topright", "bottomright", "
 	invokeMethod(map, data, "addLegend", legend)
 }
 
+adult2011 <- c("ST_NM" ,"Ratio 2011")
+adult2001 <- c("ST_NM", "Ratio 2001")
+
 map <- leaflet(width = "100%") %>% 
   addProviderTiles("Esri") %>% 
-  addPolygons(data = states, 
+  addPolygons(data = states[adult2011], 
               color = "#000000", 
               weight = 1, smoothFactor = 0.5,
               opacity = 1.0, fillOpacity = 0.8,
               dashArray = "3",
               fillColor = ~pal(ratio$`2011 Census`),
-              label = ~states$ST_NM,
+              label = paste(states$ST_NM,": ",ratio$`2011 Census`),
               highlightOptions = highlightOptions(color = "white", weight = 2),
-              popup = paste0("<strong>State name: </strong>",
-                             states$ST_NM)) %>%
+              group = "2011") %>%
+  
+  addPolygons(data = states[adult2001], 
+              color = "#000000", 
+              weight = 1, smoothFactor = 0.5,
+              opacity = 1.0, fillOpacity = 0.8,
+              dashArray = "3",
+              fillColor = ~pal(ratio$`2001 Census`),
+              label = paste0(states$ST_NM,": ",ratio$`2001 Census`),
+              highlightOptions = highlightOptions(color = "white", weight = 2),
+              group = "2001") %>%
   addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
   addScaleBar() %>%
   addSimpleGraticule(showOriginLabel = TRUE) %>%
   addLegend_decreasing("bottomleft", pal = pal, values = na.omit(ratio$`2011 Census`),
-    title = "Gender Ratio",
+    title = "Females per 1k males",
     opacity = 1,
-    decreasing = TRUE
+    decreasing = TRUE,
+    group = "2011"
+  ) %>% 
+  addLayersControl(
+    baseGroups = c("2011", "2001"),
+    options = layersControlOptions(collapsed = FALSE)
   )
 
 map
@@ -196,10 +224,14 @@ map
 
 ```{r}
 library(DT)
-ratio[6,2] <- as.integer(chandigarh)
-ratio[8,2] <- as.integer(dadranagarhaveli)
-ratio[9,2] <- as.integer(damandiu)
-ratio[27,2] <- as.integer(puducherry)
+ratio[6,2] <- as.integer(chandigarh2011)
+ratio[8,2] <- as.integer(dadranagarhaveli2011)
+ratio[9,2] <- as.integer(damandiu2011)
+ratio[27,2] <- as.integer(puducherry2011)
+ratio[6,3] <- as.integer(chandigarh2001)
+ratio[8,3] <- as.integer(dadranagarhaveli2001)
+ratio[9,3] <- as.integer(damandiu2001)
+ratio[27,3] <- as.integer(puducherry2001)
 datatable(ratio[order(-ratio[2]),], options = list(pageLength = 36))
 ```
 
