@@ -29,11 +29,21 @@ library("raster")
 ### What should we map today?
 
 ```{r echo=FALSE, warning=F}
-map <- leaflet(width = "100%")  %>%  
-  addProviderTiles(providers$Stamen.Terrain, options = tileOptions(minZoom=3, maxZoom=8)) %>% 
+map <- leaflet(width = "100%")  %>%
+  addProviderTiles(providers$Esri.WorldStreetMap, options = tileOptions(minZoom=2, maxZoom=18), group = "World Street Map by Esri") %>%
+  addProviderTiles(providers$Esri.DeLorme, options = tileOptions(minZoom=2, maxZoom=18), group = "DeLorme by Esri") %>%
+  addProviderTiles(providers$OpenTopoMap, options = tileOptions(minZoom=2, maxZoom=18), group = "Open Topological Map") %>%
+  addProviderTiles(providers$Esri.WorldImagery, options = tileOptions(minZoom=2, maxZoom=18), group = "Sattelite Imagery by Esri") %>%
+  addProviderTiles(providers$Stamen.TerrainBackground, options = tileOptions(minZoom=2, maxZoom=14), group = "Terrain by Stamen") %>%
+  addProviderTiles(providers$Stamen.TonerLabels, options = tileOptions(minZoom=2, maxZoom=14), group = "Toner Labels by Stamen") %>%
+
   addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
   addScaleBar() %>%
-  addSimpleGraticule(showOriginLabel = TRUE) %>%
+  addSimpleGraticule(showOriginLabel = TRUE) %>% 
+  addLayersControl(
+    baseGroups = c("World Street Map by Esri", "DeLorme by Esri", "Open Topological Map", "Terrain by Stamen", "Sattelite Imagery by Esri", "Toner Labels by Stamen"),
+    options = layersControlOptions(collapsed = FALSE)
+  ) %>%
   setView(lng = 82.5, lat = 21, 4)
 map
 ```
@@ -44,4 +54,4 @@ map
 ##[Parliament Constituencies of India](parliamentconstituencies.html)
 ##[India Rail Network](indianrailwaynetwork.html)
 ##[Airports in India](indianairports.html)
-##[Statewise Gender Ratio](indiastatesgenderratio.html)
+##[Statewise Population Data](populationdata.html)

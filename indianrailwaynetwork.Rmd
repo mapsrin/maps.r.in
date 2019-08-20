@@ -30,12 +30,14 @@ railnet <- geojsonio::geojson_read("data/Transportation/trains.json", what = "sp
 ### Railway Network of India
 
 ```{r, echo=FALSE, warning=F}
-map <- leaflet(width = "100%") %>% 
-  addProviderTiles("Esri") %>% 
+map <- leaflet(width = "100%") %>%
+  setView(82, 25, zoom = 4) %>%
+  addProviderTiles(providers$Stamen.Terrain) %>% 
+  addTiles(urlTemplate = "http://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png",
+           attribution = '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a>, Style: <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA 2.0</a> <a href="http://www.openrailwaymap.org/">OpenRailwayMap</a> and OpenStreetMap') %>%
   addPolylines(data = railnet, 
-              color = "#010101", 
-              weight = 1,
-              opacity = 1.0,
+              weight = 3,
+              opacity = 0.,
               label = railnet$name,
               group = "trains") %>%
   addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 

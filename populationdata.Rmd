@@ -1,0 +1,171 @@
+---
+output: html_document
+---
+
+<style>
+    body .main-container {
+        max-width: 100%;
+        padding: 0;
+        margin: 0;
+    }
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+```{r, echo=FALSE, message=F, warning=F, results = 'hide'}
+library(leaflet)
+library(leaflet.minicharts)
+library(rgdal)
+library(rvest)
+library(tidyverse)
+library(ggmap)
+library(raster)
+library(sp)
+library(htmltools)
+library(htmlwidgets)
+library(legendreverse)
+
+states <- readOGR("data/IndiaAdminUnits/States.shp", stringsAsFactors = FALSE)
+states$ST_NM[1] <- "Andaman and Nicobar Islands"
+states$ST_NM[8] <- "Dadra and Nagar Haveli"
+states$ST_NM[9] <- "Daman and Diu"
+states$ST_NM[14] <- "Jammu and Kashmir"
+states$ST_NM[25] <- "Delhi"
+states <- states[order(states$ST_NM),]
+centroids <- getSpPPolygonsLabptSlots(states)
+states[['Centroids']] <- centroids
+
+url <- 'https://en.wikipedia.org/wiki/Demographics_of_India#Census_of_India:_sample_registration_system'
+
+populationData <- url %>%
+  read_html(header=TRUE, colClasses="character") %>% 
+  html_nodes(xpath = '//*[@id="mw-content-text"]/div/table[9]') %>%
+  html_table()
+
+col2cvt <- c(1,3,5:7,9:12)
+
+populationData[[1]][,col2cvt] <- lapply(populationData[[1]][,col2cvt],function(x){as.numeric(gsub(",", "", x))})
+
+populationData[[1]] <- populationData[[1]][-37,]
+populationData[[1]]["UrbanRuralRatio"] <- populationData[[1]]$`Urban[53]`/populationData[[1]]$`Rural[53]`
+populationData[[1]] <- populationData[[1]][order(populationData[[1]]$`State/UT`),]
+
+states@data <- cbind(states@data,  populationData[[1]][,3:13])
+
+plotSubsetPop = subset(states, states$`Population[52]` > 350000)
+plotSubsetPopDens = subset(states, states$`Area[54] (km2)` > 1500)
+plotSubsetGR = subset(states, states$`Area[54] (km2)` > 1500)
+plotSubsetUR = subset(states, states$`Area[54] (km2)` > 1500)
+
+palpopdens <- colorNumeric(
+  palette = "YlOrRd",
+  domain = plotSubsetPopDens$`Density (per km2)`
+)
+
+```
+
+## {.tabset}
+### Statewise, Population Density
+
+```{r, echo=FALSE, warning=F}
+
+map <- leaflet(width = "100%") %>% 
+  addProviderTiles("Esri") %>% 
+  addPolygons(data = states,
+              color = "#000000", 
+              weight = 1, smoothFactor = 0.5,
+              opacity = 1.0, fillOpacity = 0.8,
+              dashArray = "3",
+              fillColor = ~palpopdens(states$`Density (per km2)`),
+              label = states$ST_NM,
+              popup = paste(states$ST_NM, '<br>Population: ', format(round(as.numeric(states$`Population[52]`), 1), big.mark=","), '<br>Area: ', format(round(as.numeric(states$`Area[54] (km2)`), 1), big.mark=","), 'sqkm<br>Population Density: ', states$`Density (per km2)`, 'per sqkm<br>% of National Population: ', states$`Percent (%)`),
+              highlightOptions = highlightOptions(color = "white", weight = 2),
+              group = "Population Density") %>%
+  
+  addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
+  addScaleBar() %>%
+  addSimpleGraticule(showOriginLabel = TRUE) %>%
+  addLegend("bottomleft", pal = palpopdens, values = plotSubsetPopDens$`Density (per km2)`, title = "Population Density", opacity = 1, group = "Population Density", layerId = "Population Density" )
+  
+map
+  
+```
+
+### Statewise, Gender Ratio
+
+```{r, echo=FALSE, warning=F}
+
+palpopgr <- colorNumeric(
+  palette = "YlOrRd",
+  reverse = TRUE,
+  domain = plotSubsetGR$`Sex ratio`
+)
+
+mapGR <- leaflet(width = "100%") %>% 
+  addProviderTiles("Esri") %>% 
+  addPolygons(data = states, 
+              color = "#000000", 
+              weight = 1, smoothFactor = 0.5,
+              opacity = 1.0, fillOpacity = 0.8,
+              dashArray = "3",
+              fillColor = ~palpopgr(states$`Sex ratio`),
+              label = states$ST_NM,
+              popup = paste(states$ST_NM, '<br>', states$`Sex ratio`, 'females per 1000 males<br>Male Population: ', format(round(as.numeric(states$Male), 1), big.mark=","), '<br>Female Population: ',format(round(as.numeric(states$Female), 1), big.mark=","), '<br>Difference: ', format(round(as.numeric(states$`Difference between male and female`), 1), big.mark=",")),
+              highlightOptions = highlightOptions(color = "white", weight = 2),
+              group = "Population Gender Ratio") %>%
+  
+  addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
+  addScaleBar() %>%
+  addSimpleGraticule(showOriginLabel = TRUE) %>%
+  legendreverse("bottomleft", pal = palpopgr, values = plotSubsetGR$`Sex ratio`, opacity = 1, decreasing = TRUE, title = "Gender Ratio", group = "Gender Ratio", layerId = "Gender Ratio" )
+  
+mapGR
+  
+```
+
+### Statewise, Urban - Rural %
+
+```{r, echo=FALSE, warning=F}
+palpopur <- colorNumeric(
+  palette = "YlOrRd",
+  reverse = T,
+  domain = plotSubsetUR$UrbanRuralRatio
+)
+
+mapUR <- leaflet(width = "100%") %>% 
+  addProviderTiles("Esri") %>% 
+  addPolygons(data = states, 
+              color = "#000000", 
+              weight = 1, smoothFactor = 0.5,
+              opacity = 1.0, fillOpacity = 0.8,
+              dashArray = "3",
+              fillColor = ~palpopur(states$UrbanRuralRatio),
+              label = states$ST_NM,
+              popup = paste(states$ST_NM, '<br>Urban Population: ', format(round(as.numeric(states$`Urban[53]`), 1), big.mark=","), '<br>Rural Population: ', format(round(as.numeric(states$`Rural[53]`), 1), big.mark=","), '<br>Ratio Urban:Rural: ', format(round(as.numeric(states$UrbanRuralRatio), 2), big.mark=",")),
+              highlightOptions = highlightOptions(color = "white", weight = 2),
+              group = "Urban:Rural") %>%
+  
+  addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
+  addScaleBar() %>%
+  addSimpleGraticule(showOriginLabel = TRUE) %>%
+  legendreverse("bottomleft", pal = palpopur, values = plotSubsetUR$UrbanRuralRatio, decreasing = T, opacity = 1, title = "Urban:Rural", group = "Urban:Rural", layerId = "Urban:Rural" )
+  
+mapUR
+
+```
+
+### Data
+
+```{r}
+library(DT)
+populationData[[1]] <- populationData[[1]][order(populationData[[1]]$Rank),]
+datatable(populationData[[1]], options = list(pageLength = 36), rownames = FALSE)
+```
+
+### Info
+
+Shape files from:
+Demo of 4 colour theorem
