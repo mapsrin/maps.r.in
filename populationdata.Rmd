@@ -126,7 +126,7 @@ mapGR
   
 ```
 
-### Statewise, Urban - Rural %
+### Statewise, Urban:Rural Ratio
 
 ```{r, echo=FALSE, warning=F}
 palpopur <- colorNumeric(
