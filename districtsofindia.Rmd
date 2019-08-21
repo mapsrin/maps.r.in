@@ -87,4 +87,4 @@ datatable(districts@data, options = list(pageLength = 100))
 
 Shape files from:
 Demo of 4 colour theorem
-Some anomalies
+Some anomalies can be observed where a fifth colour is used. I'm guessing that this is because some districts / UTs are not contiguous. eg: Puducherry, Dadra and Nagar Haveli, Daman and Diu.
