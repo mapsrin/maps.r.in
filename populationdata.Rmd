@@ -19,7 +19,8 @@ knitr::opts_chunk$set(echo = FALSE)
 library(leaflet)
 library(leaflet.minicharts)
 library(rgdal)
-library(rvest)
+library(RCurl)
+library(XML)
 library(tidyverse)
 library(ggmap)
 library(raster)
@@ -30,6 +31,7 @@ library(legendreverse)
 library(data.table)
 
 round_percent <- function(x) { 
+  if(!is.na(x)) {
     x <- x/sum(x)*100  # Standardize result
     res <- floor(x)    # Find integer bits
     rsum <- sum(res)   # Find out how much we are missing
@@ -39,50 +41,41 @@ round_percent <- function(x) {
         res[o[1:(100-rsum)]] <- res[o[1:(100-rsum)]]+1
     } 
     res 
+  }
 }
 
-states <- readOGR("data/IndiaAdminUnits/States.shp", stringsAsFactors = FALSE)
-states$ST_NM[1] <- "Andaman and Nicobar Islands"
-states$ST_NM[8] <- "Dadra and Nagar Haveli"
-states$ST_NM[9] <- "Daman and Diu"
-states$ST_NM[14] <- "Jammu and Kashmir"
-states$ST_NM[25] <- "Delhi"
-states <- states[order(states$ST_NM),]
+states <- readOGR("data/IndiaAdminUnits/States_2011.shp", stringsAsFactors = FALSE)
+states <- states[order(states$State.Name),]
 centroids <- getSpPPolygonsLabptSlots(states)
 states[['Centroids']] <- centroids
 
-url <- 'https://en.wikipedia.org/wiki/Demographics_of_India#Census_of_India:_sample_registration_system'
+url <- 'https://en.wikipedia.org/wiki/2011_Census_of_India'
+url_parsed <- htmlParse(getURL(url), asText = TRUE)
+tableNodes <- getNodeSet(url_parsed, '//*[@id="mw-content-text"]/div/table[6]')
+populationData <- readHTMLTable(tableNodes[[1]], header=TRUE, colClasses = c("integer", rep("character",3), "FormattedInteger", "double", rep("FormattedInteger", 3), "double", rep("FormattedInteger",4), "Percent"))
 
-populationData <- url %>%
-  read_html(header=TRUE, colClasses="character") %>% 
-  html_nodes(xpath = '//*[@id="mw-content-text"]/div/table[9]') %>%
-  html_table()
-setnames(populationData[[1]], old=c("Population[52]","Rural[53]", "Urban[53]", "Area[54] (km2)", "Density (per km2)"), new=c("Population", "Rural", "Urban", "Area (sqkm)", "Density (per sqkm)"))
+setnames(populationData, old = c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15), new = c("Rank", "State/UT Name", "Capitals", "Type", "Population", "% of Total Population", "Males", "Females", "Gender Ratio", "Literacy Rate (%)", "Rural Population", "Urban Population", "Area (sqkm)", "Density (per sqkm)", "Decadal Growth%(2001-2011)"))
 
-col2cvt <- c(1,3,5:7,9:12)
+populationData <- populationData[-36,]
 
-populationData[[1]][,col2cvt] <- lapply(populationData[[1]][,col2cvt],function(x){as.numeric(gsub(",", "", x))})
+populationData["Urban Rural Ratio"] <- round(populationData$`Urban Population`/populationData$`Rural Population`,2) 
+populationData["Urban %"] <- round(100*populationData$`Urban Population`/populationData$Population,2)
+populationData["Rural %"] <- round(100*populationData$`Rural Population`/populationData$Population,2)
 
-populationData[[1]] <- populationData[[1]][-37,]
-populationData[[1]]["Urban Rural Ratio"] <- format(signif(as.numeric(populationData[[1]]$`Urban`/populationData[[1]]$`Rural`), 4))
-populationData[[1]]["Urban Percentage"] <-
-format(signif(as.numeric(100.0*populationData[[1]]$`Urban`/populationData[[1]]$`Population`), 4))
-populationData[[1]]["Rural Percentage"] <-
-format(signif(as.numeric(100.0*populationData[[1]]$`Rural`/populationData[[1]]$`Population`), 4))
 
-populationData[[1]] <- populationData[[1]][order(populationData[[1]]$`State/UT`),]
+populationData <- populationData[order(populationData$`State/UT Name`),]
 
-states@data <- cbind(states@data,  populationData[[1]][,3:15])
+#Add NAs for parts of Kashmir outside LOC
+populationData[nrow(populationData)+1,] <- NA
 
-plotSubsetPop <- subset(states, states$`Population` > 350000)
-plotSubsetPopDens <- subset(states, states$`Area (sqkm)` > 1500)
-plotSubsetGR <- subset(states, states$`Area (sqkm)` > 1500)
-plotSubsetUR <- subset(states, states$`Area (sqkm)` > 1500)
+states@data <- cbind(states@data,  populationData[,3:18])
+
+plotSubset <- subset(states, states$`Area (sqkm)` > 1500)
 
 ```
 
 ## {.tabset}
-### Statewise, Population Density*
+### Population Density*
 
 ```{r, echo=FALSE, warning=F}
 labsPD <- lapply(seq(nrow(states@data)), function(i) {
@@ -99,20 +92,20 @@ labsPD <- lapply(seq(nrow(states@data)), function(i) {
         <span style='float:left'>Population Density: %s per sqkm</span>
         </div>
         </div>",
-        states@data[i, "ST_NM"],
-        format(as.numeric(states@data[i, "Population"]), big.mark=","),
-        as.numeric(states@data[i, "Percent (%)"]), 
-        as.numeric(states@data[i, "Percent (%)"]), 100.0 - as.numeric(states@data[i, "Percent (%)"]),
-        format(as.numeric(states@data[i, "Area (sqkm)"]), big.mark=","), 
-        format(round(100.0*as.numeric(states@data[i, "Area (sqkm)"])/3287240,2)),
-        100.0*as.numeric(states@data[i, "Area (sqkm)"])/3287240, 100.0 - 100.0*as.numeric(states@data[i, "Area (sqkm)"])/3287240,
+        states@data[i, "State.Name"],
+        format(states@data[i, "Population"], big.mark=","),
+        states@data[i, "% of Total Population"], 
+        states@data[i, "% of Total Population"], 100.0 - states@data[i, "% of Total Population"],
+        format(states@data[i, "Area (sqkm)"], big.mark=","), 
+        format(round(100.0*states@data[i, "Area (sqkm)"]/3287240,2)),
+        100.0*states@data[i, "Area (sqkm)"]/3287240, 100.0 - 100.0*states@data[i, "Area (sqkm)"]/3287240,
         states@data[i, "Density (per sqkm)"]
       ), '</p>' ) 
 })
 
 palpopdens <- colorNumeric(
   palette = "YlOrRd",
-  domain = plotSubsetPopDens$`Density (per sqkm)`
+  domain = plotSubset$`Density (per sqkm)`
 )
 
 map <- leaflet(width = "100%") %>% 
@@ -139,18 +132,129 @@ map <- leaflet(width = "100%") %>%
   addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
   addScaleBar() %>%
   addSimpleGraticule(showOriginLabel = TRUE) %>%
-  addLegend("bottomleft", pal = palpopdens, values = plotSubsetPopDens$`Density (per sqkm)`, title = "Population Density", opacity = 1, group = "Population Density", layerId = "Population Density" )
+  addLegend("bottomleft", pal = palpopdens, values = plotSubset$`Density (per sqkm)`, title = "Population Density", opacity = 1, group = "Population Density", layerId = "Population Density" )
   
 map
   
 ```
+*2011 Census and State/UT boundaries
 
-### Statewise, Gender Ratio*
+### Population Growth% 2001-2011*
+
+```{r, echo=FALSE, warning=F}
+labsPG <- lapply(seq(nrow(states@data)), function(i) {
+  paste0( '<p>', sprintf(
+        "<div style='width:95%%'>
+        <div style='font-size:12px;width:200px;float:left'>
+        <span style='font-size:12px;font-weight:bold'>%s</span><hr>
+        <span style='float:left'>Population Growth: %s %%</span><br/>
+        <span style='float:left'>Population: %s</span><br/>
+        </div>
+        </div>",
+        states@data[i, "State.Name"],
+        states@data[i, "Decadal Growth%(2001-2011)"],
+        format(states@data[i, "Population"], big.mark=",")
+      ), '</p>' ) 
+})
+
+palpopgrwth <- colorNumeric(
+  palette = "YlOrRd",
+  domain = plotSubset$`Decadal Growth%(2001-2011)`
+)
+
+map <- leaflet(width = "100%") %>% 
+  addProviderTiles("Esri") %>% 
+  addPolygons(data = states,
+              color = "#000000", 
+              weight = 1, smoothFactor = 0.5,
+              opacity = 1.0, fillOpacity = 0.8,
+              dashArray = "3",
+              fillColor = ~palpopgrwth(states$`Decadal Growth%(2001-2011)`),
+              label = lapply(labsPG, htmltools::HTML),
+              labelOptions = labelOptions(
+                offset=c(-100,-140),
+                textOnly = T,
+                style=list(
+                  'background'='rgba(255,255,255,0.95)',
+                  'border-color' = 'rgba(0,0,0,1)',
+                  'border-radius' = '10px',
+                  'border-style' = 'solid',
+                  'border-width' = '2px')),
+              highlightOptions = highlightOptions(color = "white", weight = 2),
+              group = "Population Growth %") %>%
+  
+  addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
+  addScaleBar() %>%
+  addSimpleGraticule(showOriginLabel = TRUE) %>%
+  addLegend("bottomleft", pal = palpopgrwth, values = plotSubset$`Decadal Growth%(2001-2011)`, title = "Population Growth %", opacity = 1, group = "Population Growth %", layerId = "Population Growth %" )
+  
+map
+  
+```
+*2011 Census and State/UT boundaries
+
+### Literacy Rate(%)*
+
+```{r, echo=FALSE, warning=F}
+labsLit <- lapply(seq(nrow(states@data)), function(i) {
+  paste0( '<p>', sprintf(
+        "<div style='width:95%%'>
+        <div style='font-size:12px;width:200px;float:left'>
+        <span style='font-size:12px;font-weight:bold'>%s</span><hr>
+        <span style='float:left'>Literacy Rate: %s %%</span><br/>
+        <span style='float:left'>Population: %s</span><br/>
+        <span style='float:left'>Non-literate: %s</span><br/>
+        </div>
+        </div>",
+        states@data[i, "State.Name"],
+        states@data[i, "Literacy Rate (%)"],
+        format(states@data[i, "Population"], big.mark=","),
+        format(round((100-states@data[i, "Literacy Rate (%)"])*states@data[i, "Population"]/100.0,0), big.mark=",")
+      ), '</p>' ) 
+})
+
+palpopLit <- colorNumeric(
+  palette = "Blues",
+  domain = plotSubset$`Literacy Rate (%)`
+)
+
+map <- leaflet(width = "100%") %>% 
+  addProviderTiles("Esri") %>% 
+  addPolygons(data = states,
+              color = "#000000", 
+              weight = 1, smoothFactor = 0.5,
+              opacity = 1.0, fillOpacity = 0.8,
+              dashArray = "3",
+              fillColor = ~palpopLit(states$`Literacy Rate (%)`),
+              label = lapply(labsLit, htmltools::HTML),
+              labelOptions = labelOptions(
+                offset=c(-100,-140),
+                textOnly = T,
+                style=list(
+                  'background'='rgba(255,255,255,0.95)',
+                  'border-color' = 'rgba(0,0,0,1)',
+                  'border-radius' = '10px',
+                  'border-style' = 'solid',
+                  'border-width' = '2px')),
+              highlightOptions = highlightOptions(color = "white", weight = 2),
+              group = "Literacy Rate %") %>%
+  
+  addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
+  addScaleBar() %>%
+  addSimpleGraticule(showOriginLabel = TRUE) %>%
+  addLegend("bottomleft", pal = palpopLit, values = plotSubset$`Literacy Rate (%)`, title = "Literacy Rate %", opacity = 1, group = "Literacy Rate %", layerId = "Literacy Rate %" )
+  
+map
+  
+```
+*2011 Census and State/UT boundaries
+
+### Gender Ratio*
 
 ```{r, echo=FALSE, warning=F}
 
 labsGR <- lapply(seq(nrow(states@data)), function(i) {
-  nums <- round_percent(c(as.numeric(100*states@data[i, "Male"]/states@data[i, "Population"]),as.numeric(100*states@data[i, "Female"]/states@data[i, "Population"])))
+  nums <- round_percent(c(100*states@data[i, "Males"]/states@data[i, "Population"],100*states@data[i, "Females"]/states@data[i, "Population"]))
   paste0( '<p>', sprintf(
         "<div style='font-size:12px;width:200px;float:left'>
         <span style='font-size:12px;font-weight:bold'>%s</span><hr>
@@ -171,18 +275,18 @@ labsGR <- lapply(seq(nrow(states@data)), function(i) {
         <span style='float:right'>%s</span>
         </div>
         </div>",
-        states@data[i, "ST_NM"],
-        states@data[i, "Sex ratio"],
+        states@data[i, "State.Name"],
+        states@data[i, "Gender Ratio"],
         nums[1], nums[2],
         nums[1], nums[2],
-        format(states@data[i, "Male"], big.mark=","), format(states@data[i, "Female"], big.mark=","), format(states@data[i, "Difference between male and female"], big.mark=",")
+        format(states@data[i, "Males"], big.mark=","), format(states@data[i, "Females"], big.mark=","), format(states@data[i, "Males"] - states@data[i, "Females"], big.mark=",")
       ), '</p>' ) 
 })
 
 palpopgr <- colorNumeric(
   palette = "YlOrRd",
   reverse = TRUE,
-  domain = plotSubsetGR$`Sex ratio`
+  domain = plotSubset$`Gender Ratio`
 )
 
 mapGR <- leaflet(width = "100%") %>%
@@ -193,7 +297,7 @@ mapGR <- leaflet(width = "100%") %>%
     weight = 1, smoothFactor = 0.5,
     opacity = 1.0, fillOpacity = 0.8,
     dashArray = "3",
-    fillColor = ~palpopgr(as.numeric(states$`Sex ratio`)),
+    fillColor = ~palpopgr(as.numeric(states$`Gender Ratio`)),
     label = lapply(labsGR, htmltools::HTML),
     labelOptions = labelOptions(
       offset=c(-100,-140),
@@ -210,21 +314,22 @@ mapGR <- leaflet(width = "100%") %>%
   addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
   addScaleBar() %>%
   addSimpleGraticule(showOriginLabel = TRUE) %>%
-  legendreverse("bottomleft", pal = palpopgr, values = plotSubsetGR$`Sex ratio`, opacity = 1, decreasing = TRUE, title = "Gender Ratio", group = "Gender Ratio", layerId = "Gender Ratio" )
+  legendreverse("bottomleft", pal = palpopgr, values = plotSubset$`Gender Ratio`, opacity = 1, decreasing = TRUE, title = "Gender Ratio", group = "Gender Ratio", layerId = "Gender Ratio" )
   
 mapGR
   
 ```
+*2011 Census and State/UT boundaries
 
-### Statewise, Urban:Rural Ratio*
+### Urban:Rural Ratio*
 
 ```{r, echo=FALSE, warning=F}
 # This is our pretty hover content
 labs <- lapply(seq(nrow(states@data)), function(i) {
-  nums <- round_percent(c(as.numeric(states@data[i, "Urban Percentage"]),as.numeric(states@data[i, "Rural Percentage"])))
+  nums <- round_percent(c(as.numeric(states@data[i, "Urban %"]),as.numeric(states@data[i, "Rural %"])))
   paste0( '<p>', sprintf(
         "<div style='font-size:12px;width:200px;float:left'>
-        <span style='font-size:12px;font-weight:bold'>%s</span><br/><hr>
+        <span style='font-size:12px;font-weight:bold'>%s</span><hr>
         Urban:Rural Ratio: %s<br/>
         <div style='width:95%%'>
         <span style='float:left'>Urban</span>
@@ -242,18 +347,18 @@ labs <- lapply(seq(nrow(states@data)), function(i) {
         <span style='float:right'>%s</span>
         </div>
         </div>",
-        states@data[i, "ST_NM"],
+        states@data[i, "State.Name"],
         states@data[i, "Urban Rural Ratio"],
         nums[1],nums[2],
         nums[1],nums[2],
-        format(states@data[i, "Urban"], big.mark=","), format(states@data[i, "Rural"], big.mark=","), format(states@data[i, "Population"], big.mark=",")
+        format(states@data[i, "Urban Population"], big.mark=","), format(states@data[i, "Rural Population"], big.mark=","), format(states@data[i, "Population"], big.mark=",")
       ), '</p>' ) 
 })
 
 palpopur <- colorNumeric(
   palette = "YlOrRd",
   reverse = T,
-  domain = as.numeric(plotSubsetUR@data$`Urban Rural Ratio`)
+  domain = as.numeric(plotSubset@data$`Urban Rural Ratio`)
 )
 
 mapUR <- leaflet(width = "100%") %>%
@@ -272,37 +377,34 @@ mapUR <- leaflet(width = "100%") %>%
       style=list(
         'background'='rgba(255,255,255,0.95)',
         'border-color' = 'rgba(0,0,0,1)',
-        'border-radius' = '4px',
+        'border-radius' = '10px',
         'border-style' = 'solid',
-        'border-width' = '4px')),
+        'border-width' = '2px')),
     highlightOptions = highlightOptions(color = "white", weight = 2),
               group = "Urban:Rural") %>%
   
   addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
   addScaleBar() %>%
   addSimpleGraticule(showOriginLabel = TRUE) %>%
-  legendreverse("bottomleft", pal = palpopur, values = as.numeric(plotSubsetUR$`Urban Rural Ratio`), decreasing = T, opacity = 1, title = "Urban:Rural", group = "Urban:Rural", layerId = "Urban:Rural" )
+  legendreverse("bottomleft", pal = palpopur, values = as.numeric(plotSubset$`Urban Rural Ratio`), decreasing = T, opacity = 1, title = "Urban:Rural", group = "Urban:Rural", layerId = "Urban:Rural" )
   
 mapUR
 
 ```
+*2011 Census and State/UT boundaries
 
 ### Data
 
 ```{r}
 library(DT)
-populationData[[1]] <- populationData[[1]][order(populationData[[1]]$Rank),]
-populationData[[1]][,col2cvt] <- lapply(populationData[[1]][,col2cvt],function(x){format(round(as.numeric(x), 2), big.mark=",")})
-datatable(populationData[[1]], options = list(pageLength = 36), rownames = FALSE)
+populationData <- populationData[order(populationData$Rank),]
+populationData <- populationData[-36,]
+col2cnvrt <- c(1, 5:18)
+col2cnvrt2 <- c(0, 4:17) #because !#$@# columnDefs indexes from 0
+populationData[,col2cnvrt] <- lapply(populationData[,col2cnvrt],function(x){format(round(as.numeric(x), 2), big.mark=",")})
+datatable(populationData, rownames = FALSE, options = list(pageLength = 35, columnDefs = list(list(className = 'dt-right', targets = col2cnvrt2))))
 ```
 
 Source: https://en.wikipedia.org/wiki/Demographics_of_India#Census_of_India:_sample_registration_system
 
 ### Info
-
-Shape files from:
-Demo of 4 colour theorem
-
-## 
-*2011 Census
-Source: https://en.wikipedia.org/wiki/Demographics_of_India#Census_of_India:_sample_registration_system
