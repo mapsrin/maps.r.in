@@ -13,4 +13,4 @@ output:
 ##[Parliament Constituencies of India](parliamentconstituencies.html)
 ##[India Rail Network](indianrailwaynetwork.html)
 ##[Airports in India](indianairports.html)
-##[Statewise Gender Ratio](indiastatesgenderratio.html)
+##[Statewise Population Info (2011 Census)](populationdata.html)
