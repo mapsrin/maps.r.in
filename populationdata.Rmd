@@ -67,6 +67,8 @@ populationData <- populationData[order(populationData$`State/UT Name`),]
 
 #Add NAs for parts of Kashmir outside LOC
 populationData[nrow(populationData)+1,] <- NA
+populationData[36, "Area (sqkm)"] <- 123512
+states@data[36, "State.Name"] <- "Outside LOC"
 
 states@data <- cbind(states@data,  populationData[,3:18])
 
@@ -78,32 +80,27 @@ plotSubset <- subset(states, states$`Area (sqkm)` > 1500)
 ### Population Density*
 
 ```{r, echo=FALSE, warning=F}
-labsPD <- lapply(seq(nrow(states@data)), function(i) {
+#Hover content
+hoverlabels <- lapply(seq(nrow(states@data)), function(i) {
   paste0( '<p>', sprintf(
         "<div style='width:95%%'>
         <div style='font-size:12px;width:200px;float:left'>
         <span style='font-size:12px;font-weight:bold'>%s</span><hr>
         <span style='float:left'>Population : %s (%s%%)</span><br/>
-        <span style='background:#fe6a59;width:%s%%;float:left'>&nbsp;</span>
-        <span style='background:#eeeeee;width:%s%%;float:right'>&nbsp;</span><hr>
         <span style='float:left'>Area (sqkm): %s (%s%%)</span><br/>
-        <span style='background:#fe6a59;width:%s%%;float:left'>&nbsp;</span>
-        <span style='background:#eeeeee;width:%s%%;float:right'>&nbsp;</span><hr>
         <span style='float:left'>Population Density: %s per sqkm</span>
         </div>
         </div>",
         states@data[i, "State.Name"],
         format(states@data[i, "Population"], big.mark=","),
-        states@data[i, "% of Total Population"], 
-        states@data[i, "% of Total Population"], 100.0 - states@data[i, "% of Total Population"],
+        states@data[i, "% of Total Population"],
         format(states@data[i, "Area (sqkm)"], big.mark=","), 
         format(round(100.0*states@data[i, "Area (sqkm)"]/3287240,2)),
-        100.0*states@data[i, "Area (sqkm)"]/3287240, 100.0 - 100.0*states@data[i, "Area (sqkm)"]/3287240,
         states@data[i, "Density (per sqkm)"]
       ), '</p>' ) 
 })
 
-palpopdens <- colorNumeric(
+mapspalette <- colorNumeric(
   palette = "YlOrRd",
   domain = plotSubset$`Density (per sqkm)`
 )
@@ -115,8 +112,8 @@ map <- leaflet(width = "100%") %>%
               weight = 1, smoothFactor = 0.5,
               opacity = 1.0, fillOpacity = 0.8,
               dashArray = "3",
-              fillColor = ~palpopdens(states$`Density (per sqkm)`),
-              label = lapply(labsPD, htmltools::HTML),
+              fillColor = ~mapspalette(states$`Density (per sqkm)`),
+              label = lapply(hoverlabels, htmltools::HTML),
               labelOptions = labelOptions(
                 offset=c(-100,-140),
                 textOnly = T,
@@ -132,8 +129,11 @@ map <- leaflet(width = "100%") %>%
   addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
   addScaleBar() %>%
   addSimpleGraticule(showOriginLabel = TRUE) %>%
-  addLegend("bottomleft", pal = palpopdens, values = plotSubset$`Density (per sqkm)`, title = "Population Density", opacity = 1, group = "Population Density", layerId = "Population Density" )
-  
+  addLegend("bottomleft", pal = mapspalette, values = plotSubset$`Density (per sqkm)`, title = "Population Density", opacity = 1, group = "Population Density", layerId = "Population Density" )
+
+css_fix <- "div.info.legend.leaflet-control br {clear: both;}"
+map <- map %>% prependContent(tags$style(type = "text/css", css_fix))  
+
 map
   
 ```
@@ -142,7 +142,8 @@ map
 ### Population Growth% 2001-2011*
 
 ```{r, echo=FALSE, warning=F}
-labsPG <- lapply(seq(nrow(states@data)), function(i) {
+#Hover content
+hoverlabels <- lapply(seq(nrow(states@data)), function(i) {
   paste0( '<p>', sprintf(
         "<div style='width:95%%'>
         <div style='font-size:12px;width:200px;float:left'>
@@ -157,7 +158,7 @@ labsPG <- lapply(seq(nrow(states@data)), function(i) {
       ), '</p>' ) 
 })
 
-palpopgrwth <- colorNumeric(
+mapspalette <- colorNumeric(
   palette = "YlOrRd",
   domain = plotSubset$`Decadal Growth%(2001-2011)`
 )
@@ -169,8 +170,8 @@ map <- leaflet(width = "100%") %>%
               weight = 1, smoothFactor = 0.5,
               opacity = 1.0, fillOpacity = 0.8,
               dashArray = "3",
-              fillColor = ~palpopgrwth(states$`Decadal Growth%(2001-2011)`),
-              label = lapply(labsPG, htmltools::HTML),
+              fillColor = ~mapspalette(states$`Decadal Growth%(2001-2011)`),
+              label = lapply(hoverlabels, htmltools::HTML),
               labelOptions = labelOptions(
                 offset=c(-100,-140),
                 textOnly = T,
@@ -186,8 +187,11 @@ map <- leaflet(width = "100%") %>%
   addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
   addScaleBar() %>%
   addSimpleGraticule(showOriginLabel = TRUE) %>%
-  addLegend("bottomleft", pal = palpopgrwth, values = plotSubset$`Decadal Growth%(2001-2011)`, title = "Population Growth %", opacity = 1, group = "Population Growth %", layerId = "Population Growth %" )
-  
+  addLegend("bottomleft", pal = mapspalette, values = plotSubset$`Decadal Growth%(2001-2011)`, title = "Population Growth %", opacity = 1, group = "Population Growth %", layerId = "Population Growth %" )
+
+css_fix <- "div.info.legend.leaflet-control br {clear: both;}"
+map <- map %>% prependContent(tags$style(type = "text/css", css_fix))  
+
 map
   
 ```
@@ -196,7 +200,8 @@ map
 ### Literacy Rate(%)*
 
 ```{r, echo=FALSE, warning=F}
-labsLit <- lapply(seq(nrow(states@data)), function(i) {
+#Hover content
+hoverlabels <- lapply(seq(nrow(states@data)), function(i) {
   paste0( '<p>', sprintf(
         "<div style='width:95%%'>
         <div style='font-size:12px;width:200px;float:left'>
@@ -213,7 +218,7 @@ labsLit <- lapply(seq(nrow(states@data)), function(i) {
       ), '</p>' ) 
 })
 
-palpopLit <- colorNumeric(
+mapspalette <- colorNumeric(
   palette = "Blues",
   domain = plotSubset$`Literacy Rate (%)`
 )
@@ -225,8 +230,8 @@ map <- leaflet(width = "100%") %>%
               weight = 1, smoothFactor = 0.5,
               opacity = 1.0, fillOpacity = 0.8,
               dashArray = "3",
-              fillColor = ~palpopLit(states$`Literacy Rate (%)`),
-              label = lapply(labsLit, htmltools::HTML),
+              fillColor = ~mapspalette(states$`Literacy Rate (%)`),
+              label = lapply(hoverlabels, htmltools::HTML),
               labelOptions = labelOptions(
                 offset=c(-100,-140),
                 textOnly = T,
@@ -242,7 +247,10 @@ map <- leaflet(width = "100%") %>%
   addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
   addScaleBar() %>%
   addSimpleGraticule(showOriginLabel = TRUE) %>%
-  addLegend("bottomleft", pal = palpopLit, values = plotSubset$`Literacy Rate (%)`, title = "Literacy Rate %", opacity = 1, group = "Literacy Rate %", layerId = "Literacy Rate %" )
+  legendreverse("bottomleft", pal = mapspalette, values = plotSubset$`Literacy Rate (%)`, title = "Literacy Rate %", opacity = 1, group = "Literacy Rate %", layerId = "Literacy Rate %" , decreasing = T)
+
+css_fix <- "div.info.legend.leaflet-control br {clear: both;}"
+map <- map %>% prependContent(tags$style(type = "text/css", css_fix))
   
 map
   
@@ -252,8 +260,11 @@ map
 ### Gender Ratio*
 
 ```{r, echo=FALSE, warning=F}
-
-labsGR <- lapply(seq(nrow(states@data)), function(i) {
+#Hover content
+hoverlabels <- lapply(seq(nrow(states@data)), function(i) {
+  if (is.na(states@data[i, "Males"]) || is.na(states@data[i, "Females"])) {
+    return(states@data[i, "State.Name"])
+  }
   nums <- round_percent(c(100*states@data[i, "Males"]/states@data[i, "Population"],100*states@data[i, "Females"]/states@data[i, "Population"]))
   paste0( '<p>', sprintf(
         "<div style='font-size:12px;width:200px;float:left'>
@@ -283,13 +294,13 @@ labsGR <- lapply(seq(nrow(states@data)), function(i) {
       ), '</p>' ) 
 })
 
-palpopgr <- colorNumeric(
+mapspalette <- colorNumeric(
   palette = "YlOrRd",
   reverse = TRUE,
   domain = plotSubset$`Gender Ratio`
 )
 
-mapGR <- leaflet(width = "100%") %>%
+map <- leaflet(width = "100%") %>%
   addProviderTiles("Esri") %>% 
   addPolygons(
     data = states,
@@ -297,8 +308,8 @@ mapGR <- leaflet(width = "100%") %>%
     weight = 1, smoothFactor = 0.5,
     opacity = 1.0, fillOpacity = 0.8,
     dashArray = "3",
-    fillColor = ~palpopgr(as.numeric(states$`Gender Ratio`)),
-    label = lapply(labsGR, htmltools::HTML),
+    fillColor = ~mapspalette(as.numeric(states$`Gender Ratio`)),
+    label = lapply(hoverlabels, htmltools::HTML),
     labelOptions = labelOptions(
       offset=c(-100,-140),
       textOnly = T,
@@ -314,9 +325,12 @@ mapGR <- leaflet(width = "100%") %>%
   addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
   addScaleBar() %>%
   addSimpleGraticule(showOriginLabel = TRUE) %>%
-  legendreverse("bottomleft", pal = palpopgr, values = plotSubset$`Gender Ratio`, opacity = 1, decreasing = TRUE, title = "Gender Ratio", group = "Gender Ratio", layerId = "Gender Ratio" )
+  legendreverse("bottomleft", pal = mapspalette, values = plotSubset$`Gender Ratio`, opacity = 1, decreasing = TRUE, title = "Gender Ratio", group = "Gender Ratio", layerId = "Gender Ratio" )
+
+css_fix <- "div.info.legend.leaflet-control br {clear: both;}"
+map <- map %>% prependContent(tags$style(type = "text/css", css_fix))
   
-mapGR
+map
   
 ```
 *2011 Census and State/UT boundaries
@@ -324,8 +338,11 @@ mapGR
 ### Urban:Rural Ratio*
 
 ```{r, echo=FALSE, warning=F}
-# This is our pretty hover content
-labs <- lapply(seq(nrow(states@data)), function(i) {
+# Hover content
+hoverlabels <- lapply(seq(nrow(states@data)), function(i) {
+  if (is.na(states@data[i, "Urban Population"]) || is.na(states@data[i, "Rural Population"])) {
+    return(states@data[i, "State.Name"])
+  }
   nums <- round_percent(c(as.numeric(states@data[i, "Urban %"]),as.numeric(states@data[i, "Rural %"])))
   paste0( '<p>', sprintf(
         "<div style='font-size:12px;width:200px;float:left'>
@@ -355,13 +372,13 @@ labs <- lapply(seq(nrow(states@data)), function(i) {
       ), '</p>' ) 
 })
 
-palpopur <- colorNumeric(
+mapspalette <- colorNumeric(
   palette = "YlOrRd",
   reverse = T,
   domain = as.numeric(plotSubset@data$`Urban Rural Ratio`)
 )
 
-mapUR <- leaflet(width = "100%") %>%
+map <- leaflet(width = "100%") %>%
   addProviderTiles("Esri") %>% 
   addPolygons(
     data = states,
@@ -369,8 +386,8 @@ mapUR <- leaflet(width = "100%") %>%
     weight = 1, smoothFactor = 0.5,
     opacity = 1.0, fillOpacity = 0.8,
     dashArray = "3",
-    fillColor = ~palpopur(as.numeric(states$`Urban Rural Ratio`)),
-    label = lapply(labs, htmltools::HTML),
+    fillColor = ~mapspalette(as.numeric(states$`Urban Rural Ratio`)),
+    label = lapply(hoverlabels, htmltools::HTML),
     labelOptions = labelOptions(
       offset=c(-100,-140),
       textOnly = T,
@@ -386,9 +403,12 @@ mapUR <- leaflet(width = "100%") %>%
   addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
   addScaleBar() %>%
   addSimpleGraticule(showOriginLabel = TRUE) %>%
-  legendreverse("bottomleft", pal = palpopur, values = as.numeric(plotSubset$`Urban Rural Ratio`), decreasing = T, opacity = 1, title = "Urban:Rural", group = "Urban:Rural", layerId = "Urban:Rural" )
+  legendreverse("bottomleft", pal = mapspalette, values = as.numeric(plotSubset$`Urban Rural Ratio`), decreasing = T, opacity = 1, title = "Urban:Rural", group = "Urban:Rural", layerId = "Urban:Rural" )
+
+css_fix <- "div.info.legend.leaflet-control br {clear: both;}"
+map <- map %>% prependContent(tags$style(type = "text/css", css_fix))
   
-mapUR
+map
 
 ```
 *2011 Census and State/UT boundaries
