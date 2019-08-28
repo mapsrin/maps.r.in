@@ -10,6 +10,42 @@ output: html_document
     }
 </style>
 
+<script>
+  function lookupCountryInfo(val) {
+    var result = "";
+
+    var lookup = {
+      "Population Density": "<p><div style='width:95%%'><div style='font-size:12px;width:200px;float:left'><span style='float:left'>Population : 1,210,854,977 </span><br/><span style='float:left'>Area (sqkm): 3,287,240<sup>[2]</sup> </span><br/><span style='float:left'>Population Density: 382 per sqkm</span></div></div></p>",
+      
+      "Population Growth %": "<p><div style='width:95%%'><div style='font-size:12px;width:200px;float:left'><span style='float:left'>Population Growth: 17.64 %%</span><br/><span style='float:left'>Population: 1,210,854,977</span></div></div></p>",
+      
+      "Literacy Rate %": "<p><div style='width:95%%'><div style='font-size:12px;width:200px;float:left'><span style='float:left'>Literacy Rate: 74.04 %%</span><br/><span style='float:left'>Population: 1,210,854,977</span><br/><span style='float:left'>Non-literate: ~314,337,952</span></div></div></p>",
+      
+      "Gender Ratio": "<p><div style='font-size:12px;width:200px;float:left'><span style='font-size:12px;'>Gender Ratio: 943 f/1000m<br/><div style='width:95%%'><span style='float:left'>Males</span><span style='float:right'>Females</span><br/><span style='color:#2aa1ec;float:left'>52%%</span><span         style='color:#fe6a59;float:right'>48%%</span><br clear='all'/><span style='background:#2aa1ec;width:52%;float:left'>&nbsp;</span><span style='background:#fe6a59;width:48%;float:right'>&nbsp;</span><br clear='all'/><span style='float:left'>Males: </span><span style='float:right'>623,724,248</span><br/><span style='float:left'>Females: </span><span style='float:right'>586,469,174</span><br/><span style='float:left'>Difference: </span><span style='float:right'>37,255,074</span></div></div></p>",
+      
+      "Urban:Rural": "<p><div style='font-size:12px;width:200px;float:left'><span style='font-size:12px;'>Urban:Rural Ratio: 0.45<br/><div style='width:95%%'><span style='float:left'>Urban</span><span style='float:right'>Rural</span><br/><span style='color:#2aa1ec;float:left'>31%%</span><span style='color:#fe6a59;float:right'>69%%</span><br clear='all'/><span style='background:#2aa1ec;width:31%;float:left'>&nbsp;</span><span style='background:#fe6a59;width:69%;float:right'>&nbsp;</span><br clear='all'/><span style='float:left'>Urban Population: </span><span style='float:right'>377,105,760</span><br/><span style='float:left'>Rural Population: </span><span style='float:right'>833,087,662</span><br/><span style='float:left'>Total Population: </span><span style='float:right'>1,210,854,977</span></div></div></p>"
+    };
+  
+    result = lookup[val];
+  
+    return result;
+  }
+
+  window.onload = function () {
+    document.getElementById("countryInfo").innerHTML = lookupCountryInfo("Population Density");
+    descendents = document.getElementsByClassName('leaflet-control');
+    for(var i=0; i<descendents.length; i++) {
+      if(descendents[i].className == 'info legend leaflet-control') {
+        if (descendents[i].innerHTML.indexOf("Population Density") != -1) {
+          descendents[i].style.display = 'block';
+        } else {
+          descendents[i].style.display = 'none';
+        }
+      }
+    }
+  }
+</script>
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 ```
@@ -17,6 +53,7 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ```{r, echo=FALSE, message=F, warning=F, results = 'hide'}
 library(leaflet)
+library(leaflet.extras)
 library(leaflet.minicharts)
 library(rgdal)
 library(RCurl)
@@ -31,7 +68,7 @@ library(legendreverse)
 library(data.table)
 
 round_percent <- function(x) { 
-  if(!is.na(x)) {
+  if(!any(is.na(x))) {
     x <- x/sum(x)*100  # Standardize result
     res <- floor(x)    # Find integer bits
     rsum <- sum(res)   # Find out how much we are missing
@@ -44,8 +81,8 @@ round_percent <- function(x) {
   }
 }
 
-states <- readOGR("data/IndiaAdminUnits/States_2011.shp", stringsAsFactors = FALSE)
-states <- states[order(states$State.Name),]
+states <- readRDS("data/IndiaAdminUnits/States_2011_simplified_1.rds")
+states <- states[order(as.numeric(states$ID_1)),]
 centroids <- getSpPPolygonsLabptSlots(states)
 states[['Centroids']] <- centroids
 
@@ -77,21 +114,28 @@ plotSubset <- subset(states, states$`Area (sqkm)` > 1500)
 ```
 
 ## {.tabset}
-### Population Density*
+### Population Density^[1]^
 
+<div class = "col-md-8">
+<div class = "row">
 ```{r, echo=FALSE, warning=F}
 #Hover content
-hoverlabels <- lapply(seq(nrow(states@data)), function(i) {
+hoverlabelsPopD <- lapply(seq(nrow(states@data)), function(i) {
+  if (is.na(states@data[i, "Population"])) {
+    return(paste0('<p>', sprintf(
+        "<div style='font-size:12px;width:200px;float:left'>
+        <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/>",         states@data[i, "State...UT"])))
+  }
   paste0( '<p>', sprintf(
-        "<div style='width:95%%'>
-        <div style='font-size:12px;width:200px;float:left'>
-        <span style='font-size:12px;font-weight:bold'>%s</span><hr>
+        "<div style='font-size:12px;width:200px;float:left'>
+        <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/>
         <span style='float:left'>Population : %s (%s%%)</span><br/>
+        <div style='width:95%%'>
         <span style='float:left'>Area (sqkm): %s (%s%%)</span><br/>
         <span style='float:left'>Population Density: %s per sqkm</span>
         </div>
         </div>",
-        states@data[i, "State.Name"],
+        states@data[i, "State...UT"],
         format(states@data[i, "Population"], big.mark=","),
         states@data[i, "% of Total Population"],
         format(states@data[i, "Area (sqkm)"], big.mark=","), 
@@ -100,22 +144,157 @@ hoverlabels <- lapply(seq(nrow(states@data)), function(i) {
       ), '</p>' ) 
 })
 
-mapspalette <- colorNumeric(
+hoverlabelsPopG <- lapply(seq(nrow(states@data)), function(i) {
+  if (is.na(states@data[i, "Population"])) {
+    return(paste0('<p>', sprintf(
+        "<div style='font-size:12px;width:200px;float:left'>
+        <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/>",         states@data[i, "State...UT"])))
+  }
+  paste0( '<p>', sprintf(
+        "<div style='font-size:12px;width:200px;float:left'>
+        <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/>
+        <span style='float:left'>Population Growth: %s %%</span><br/>
+        <div style='width:95%%'>
+        <span style='float:left'>Population: %s</span><br/>
+        </div>
+        </div>",
+        states@data[i, "State...UT"],
+        states@data[i, "Decadal Growth%(2001-2011)"],
+        format(states@data[i, "Population"], big.mark=",")
+      ), '</p>' ) 
+})
+
+hoverlabelsLit <- lapply(seq(nrow(states@data)), function(i) {
+  if (is.na(states@data[i, "Population"])) {
+    return(paste0('<p>', sprintf(
+        "<div style='font-size:12px;width:200px;float:left'>
+        <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/>",         states@data[i, "State...UT"])))
+  }
+  paste0( '<p>', sprintf(
+        "<div style='font-size:12px;width:200px;float:left'>
+        <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/>
+        <span style='float:left'>Literacy Rate: %s %%</span><br/>
+        <div style='width:95%%'>
+        <span style='float:left'>Population: %s</span><br/>
+        <span style='float:left'>Non-literate: %s</span><br/>
+        </div>
+        </div>",
+        states@data[i, "State...UT"],
+        states@data[i, "Literacy Rate (%)"],
+        format(states@data[i, "Population"], big.mark=","),
+        format(round((100-states@data[i, "Literacy Rate (%)"])*states@data[i, "Population"]/100.0,0), big.mark=",")
+      ), '</p>' ) 
+})
+
+hoverlabelsGR <- lapply(seq(nrow(states@data)), function(i) {
+  if (is.na(states@data[i, "Males"]) || is.na(states@data[i, "Females"])) {
+    return(paste0('<p>', sprintf(
+        "<div style='font-size:12px;width:200px;float:left'>
+        <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/>",         states@data[i, "State...UT"])))
+  }
+  nums <- round_percent(c(100*states@data[i, "Males"]/states@data[i, "Population"],100*states@data[i, "Females"]/states@data[i, "Population"]))
+  paste0( '<p>', sprintf(
+        "<div style='font-size:12px;width:200px;float:left'>
+        <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/>
+        Gender Ratio: %s<br/>
+        <div style='width:95%%'>
+        <span style='float:left'>Males</span>
+        <span style='float:right'>Females</span>
+        <br/>
+        <span style='color:#2aa1ec;float:left'>%s%%</span>
+        <span style='color:#fe6a59;float:right'>%s%%</span><br clear='all'/>
+        <span style='background:#2aa1ec;width:%s%%;float:left'>&nbsp;</span>
+        <span style='background:#fe6a59;width:%s%%;float:right'>&nbsp;</span>
+        <span style='float:left'>Males: </span>
+        <span style='float:right'>%s</span><br/>
+        <span style='float:left'>Females: </span>
+        <span style='float:right'>%s</span><br/>
+        <span style='float:left'>Difference: </span>
+        <span style='float:right'>%s</span>
+        </div>
+        </div>",
+        states@data[i, "State...UT"],
+        states@data[i, "Gender Ratio"],
+        nums[1], nums[2],
+        nums[1], nums[2],
+        format(states@data[i, "Males"], big.mark=","), format(states@data[i, "Females"], big.mark=","), format(states@data[i, "Males"] - states@data[i, "Females"], big.mark=",")
+      ), '</p>' ) 
+})
+
+hoverlabelsUR <- lapply(seq(nrow(states@data)), function(i) {
+  if (is.na(states@data[i, "Urban Population"]) || is.na(states@data[i, "Rural Population"])) {
+    return(paste0('<p>', sprintf(
+        "<div style='font-size:12px;width:200px;float:left'>
+        <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/>",         states@data[i, "State...UT"])))
+  }
+  nums <- round_percent(c(as.numeric(states@data[i, "Urban %"]),as.numeric(states@data[i, "Rural %"])))
+  paste0( '<p>', sprintf(
+        "<div style='font-size:12px;width:200px;float:left'>
+        <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/>
+        Urban:Rural Ratio: %s<br/>
+        <div style='width:95%%'>
+        <span style='float:left'>Urban</span>
+        <span style='float:right'>Rural</span>
+        <br/>
+        <span style='color:#2aa1ec;float:left'>%s%%</span>
+        <span style='color:#fe6a59;float:right'>%s%%</span><br clear='all'/>
+        <span style='background:#2aa1ec;width:%s%%;float:left'>&nbsp;</span>
+        <span style='background:#fe6a59;width:%s%%;float:right'>&nbsp;</span>
+        <span style='float:left'>Urban Population: </span>
+        <span style='float:right'>%s</span><br/>
+        <span style='float:left'>Rural Population: </span>
+        <span style='float:right'>%s</span><br/>
+        <span style='float:left'>Total Population: </span>
+        <span style='float:right'>%s</span>
+        </div>
+        </div>",
+        states@data[i, "State...UT"],
+        states@data[i, "Urban Rural Ratio"],
+        nums[1],nums[2],
+        nums[1],nums[2],
+        format(states@data[i, "Urban Population"], big.mark=","), format(states@data[i, "Rural Population"], big.mark=","), format(states@data[i, "Population"], big.mark=",")
+      ), '</p>' ) 
+})
+
+mapspalettePopD <- colorNumeric(
   palette = "YlOrRd",
   domain = plotSubset$`Density (per sqkm)`
 )
 
+mapspalettePOPG <- colorNumeric(
+  palette = "YlOrRd",
+  domain = plotSubset$`Decadal Growth%(2001-2011)`
+)
+
+mapspaletteLit <- colorNumeric(
+  palette = "Blues",
+  domain = plotSubset$`Literacy Rate (%)`
+)
+
+mapspaletteGR <- colorNumeric(
+  palette = "YlOrRd",
+  reverse = T,
+  domain = plotSubset$`Gender Ratio`
+)
+
+mapspaletteUR <- colorNumeric(
+  palette = "YlOrRd",
+  reverse = T,
+  domain = as.numeric(plotSubset@data$`Urban Rural Ratio`)
+)
+
 map <- leaflet(width = "100%") %>% 
-  addProviderTiles("Esri") %>% 
+  addProviderTiles("Esri") %>%
+  leafem::addMouseCoordinates() %>% 
+  
   addPolygons(data = states,
               color = "#000000", 
               weight = 1, smoothFactor = 0.5,
               opacity = 1.0, fillOpacity = 0.8,
               dashArray = "3",
-              fillColor = ~mapspalette(states$`Density (per sqkm)`),
-              label = lapply(hoverlabels, htmltools::HTML),
+              fillColor = ~mapspalettePopD(states$`Density (per sqkm)`),
+              label = lapply(hoverlabelsPopD, htmltools::HTML),
               labelOptions = labelOptions(
-                offset=c(-100,-140),
                 textOnly = T,
                 style=list(
                   'background'='rgba(255,255,255,0.95)',
@@ -126,54 +305,14 @@ map <- leaflet(width = "100%") %>%
               highlightOptions = highlightOptions(color = "white", weight = 2),
               group = "Population Density") %>%
   
-  addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
-  addScaleBar() %>%
-  addSimpleGraticule(showOriginLabel = TRUE) %>%
-  addLegend("bottomleft", pal = mapspalette, values = plotSubset$`Density (per sqkm)`, title = "Population Density", opacity = 1, group = "Population Density", layerId = "Population Density" )
-
-css_fix <- "div.info.legend.leaflet-control br {clear: both;}"
-map <- map %>% prependContent(tags$style(type = "text/css", css_fix))  
-
-map
-  
-```
-*2011 Census and State/UT boundaries
-
-### Population Growth% 2001-2011*
-
-```{r, echo=FALSE, warning=F}
-#Hover content
-hoverlabels <- lapply(seq(nrow(states@data)), function(i) {
-  paste0( '<p>', sprintf(
-        "<div style='width:95%%'>
-        <div style='font-size:12px;width:200px;float:left'>
-        <span style='font-size:12px;font-weight:bold'>%s</span><hr>
-        <span style='float:left'>Population Growth: %s %%</span><br/>
-        <span style='float:left'>Population: %s</span><br/>
-        </div>
-        </div>",
-        states@data[i, "State.Name"],
-        states@data[i, "Decadal Growth%(2001-2011)"],
-        format(states@data[i, "Population"], big.mark=",")
-      ), '</p>' ) 
-})
-
-mapspalette <- colorNumeric(
-  palette = "YlOrRd",
-  domain = plotSubset$`Decadal Growth%(2001-2011)`
-)
-
-map <- leaflet(width = "100%") %>% 
-  addProviderTiles("Esri") %>% 
   addPolygons(data = states,
               color = "#000000", 
               weight = 1, smoothFactor = 0.5,
               opacity = 1.0, fillOpacity = 0.8,
               dashArray = "3",
-              fillColor = ~mapspalette(states$`Decadal Growth%(2001-2011)`),
-              label = lapply(hoverlabels, htmltools::HTML),
+              fillColor = ~mapspalettePOPG(states$`Decadal Growth%(2001-2011)`),
+              label = lapply(hoverlabelsPopG, htmltools::HTML),
               labelOptions = labelOptions(
-                offset=c(-100,-140),
                 textOnly = T,
                 style=list(
                   'background'='rgba(255,255,255,0.95)',
@@ -184,56 +323,14 @@ map <- leaflet(width = "100%") %>%
               highlightOptions = highlightOptions(color = "white", weight = 2),
               group = "Population Growth %") %>%
   
-  addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
-  addScaleBar() %>%
-  addSimpleGraticule(showOriginLabel = TRUE) %>%
-  addLegend("bottomleft", pal = mapspalette, values = plotSubset$`Decadal Growth%(2001-2011)`, title = "Population Growth %", opacity = 1, group = "Population Growth %", layerId = "Population Growth %" )
-
-css_fix <- "div.info.legend.leaflet-control br {clear: both;}"
-map <- map %>% prependContent(tags$style(type = "text/css", css_fix))  
-
-map
-  
-```
-*2011 Census and State/UT boundaries
-
-### Literacy Rate(%)*
-
-```{r, echo=FALSE, warning=F}
-#Hover content
-hoverlabels <- lapply(seq(nrow(states@data)), function(i) {
-  paste0( '<p>', sprintf(
-        "<div style='width:95%%'>
-        <div style='font-size:12px;width:200px;float:left'>
-        <span style='font-size:12px;font-weight:bold'>%s</span><hr>
-        <span style='float:left'>Literacy Rate: %s %%</span><br/>
-        <span style='float:left'>Population: %s</span><br/>
-        <span style='float:left'>Non-literate: %s</span><br/>
-        </div>
-        </div>",
-        states@data[i, "State.Name"],
-        states@data[i, "Literacy Rate (%)"],
-        format(states@data[i, "Population"], big.mark=","),
-        format(round((100-states@data[i, "Literacy Rate (%)"])*states@data[i, "Population"]/100.0,0), big.mark=",")
-      ), '</p>' ) 
-})
-
-mapspalette <- colorNumeric(
-  palette = "Blues",
-  domain = plotSubset$`Literacy Rate (%)`
-)
-
-map <- leaflet(width = "100%") %>% 
-  addProviderTiles("Esri") %>% 
   addPolygons(data = states,
               color = "#000000", 
               weight = 1, smoothFactor = 0.5,
               opacity = 1.0, fillOpacity = 0.8,
               dashArray = "3",
-              fillColor = ~mapspalette(states$`Literacy Rate (%)`),
-              label = lapply(hoverlabels, htmltools::HTML),
+              fillColor = ~mapspaletteLit(states$`Literacy Rate (%)`),
+              label = lapply(hoverlabelsLit, htmltools::HTML),
               labelOptions = labelOptions(
-                offset=c(-100,-140),
                 textOnly = T,
                 style=list(
                   'background'='rgba(255,255,255,0.95)',
@@ -244,152 +341,33 @@ map <- leaflet(width = "100%") %>%
               highlightOptions = highlightOptions(color = "white", weight = 2),
               group = "Literacy Rate %") %>%
   
-  addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
-  addScaleBar() %>%
-  addSimpleGraticule(showOriginLabel = TRUE) %>%
-  legendreverse("bottomleft", pal = mapspalette, values = plotSubset$`Literacy Rate (%)`, title = "Literacy Rate %", opacity = 1, group = "Literacy Rate %", layerId = "Literacy Rate %" , decreasing = T)
-
-css_fix <- "div.info.legend.leaflet-control br {clear: both;}"
-map <- map %>% prependContent(tags$style(type = "text/css", css_fix))
-  
-map
-  
-```
-*2011 Census and State/UT boundaries
-
-### Gender Ratio*
-
-```{r, echo=FALSE, warning=F}
-#Hover content
-hoverlabels <- lapply(seq(nrow(states@data)), function(i) {
-  if (is.na(states@data[i, "Males"]) || is.na(states@data[i, "Females"])) {
-    return(states@data[i, "State.Name"])
-  }
-  nums <- round_percent(c(100*states@data[i, "Males"]/states@data[i, "Population"],100*states@data[i, "Females"]/states@data[i, "Population"]))
-  paste0( '<p>', sprintf(
-        "<div style='font-size:12px;width:200px;float:left'>
-        <span style='font-size:12px;font-weight:bold'>%s</span><hr>
-        Gender Ratio: %s<br/>
-        <div style='width:95%%'>
-        <span style='float:left'>Males</span>
-        <span style='float:right'>Females</span>
-        <br/>
-        <span style='color:#2aa1ec;float:left'>%s%%</span>
-        <span style='color:#fe6a59;float:right'>%s%%</span><br clear='all'/>
-        <span style='background:#2aa1ec;width:%s%%;float:left'>&nbsp;</span>
-        <span style='background:#fe6a59;width:%s%%;float:right'>&nbsp;</span><hr>
-        <span style='float:left'>Males: </span>
-        <span style='float:right'>%s</span><br/>
-        <span style='float:left'>Females: </span>
-        <span style='float:right'>%s</span><br/>
-        <span style='float:left'>Difference: </span>
-        <span style='float:right'>%s</span>
-        </div>
-        </div>",
-        states@data[i, "State.Name"],
-        states@data[i, "Gender Ratio"],
-        nums[1], nums[2],
-        nums[1], nums[2],
-        format(states@data[i, "Males"], big.mark=","), format(states@data[i, "Females"], big.mark=","), format(states@data[i, "Males"] - states@data[i, "Females"], big.mark=",")
-      ), '</p>' ) 
-})
-
-mapspalette <- colorNumeric(
-  palette = "YlOrRd",
-  reverse = TRUE,
-  domain = plotSubset$`Gender Ratio`
-)
-
-map <- leaflet(width = "100%") %>%
-  addProviderTiles("Esri") %>% 
-  addPolygons(
-    data = states,
-    color = "#000000", 
-    weight = 1, smoothFactor = 0.5,
-    opacity = 1.0, fillOpacity = 0.8,
-    dashArray = "3",
-    fillColor = ~mapspalette(as.numeric(states$`Gender Ratio`)),
-    label = lapply(hoverlabels, htmltools::HTML),
-    labelOptions = labelOptions(
-      offset=c(-100,-140),
-      textOnly = T,
-      style=list(
-        'background'='rgba(255,255,255,0.95)',
-        'border-color' = 'rgba(0,0,0,1)',
-        'border-radius' = '10px',
-        'border-style' = 'solid',
-        'border-width' = '2px')),
-    highlightOptions = highlightOptions(color = "white", weight = 2),
+  addPolygons(data = states,
+              color = "#000000", 
+              weight = 1, smoothFactor = 0.5,
+              opacity = 1.0, fillOpacity = 0.8,
+              dashArray = "3",
+              fillColor = ~mapspaletteGR(as.numeric(states$`Gender Ratio`)),
+              label = lapply(hoverlabelsGR, htmltools::HTML),
+              labelOptions = labelOptions(
+                textOnly = T,
+                style=list(
+                  'background'='rgba(255,255,255,0.95)',
+                  'border-color' = 'rgba(0,0,0,1)',
+                  'border-radius' = '10px',
+                  'border-style' = 'solid',
+                  'border-width' = '2px')),
+              highlightOptions = highlightOptions(color = "white", weight = 2),
               group = "Gender Ratio") %>%
   
-  addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
-  addScaleBar() %>%
-  addSimpleGraticule(showOriginLabel = TRUE) %>%
-  legendreverse("bottomleft", pal = mapspalette, values = plotSubset$`Gender Ratio`, opacity = 1, decreasing = TRUE, title = "Gender Ratio", group = "Gender Ratio", layerId = "Gender Ratio" )
-
-css_fix <- "div.info.legend.leaflet-control br {clear: both;}"
-map <- map %>% prependContent(tags$style(type = "text/css", css_fix))
-  
-map
-  
-```
-*2011 Census and State/UT boundaries
-
-### Urban:Rural Ratio*
-
-```{r, echo=FALSE, warning=F}
-# Hover content
-hoverlabels <- lapply(seq(nrow(states@data)), function(i) {
-  if (is.na(states@data[i, "Urban Population"]) || is.na(states@data[i, "Rural Population"])) {
-    return(states@data[i, "State.Name"])
-  }
-  nums <- round_percent(c(as.numeric(states@data[i, "Urban %"]),as.numeric(states@data[i, "Rural %"])))
-  paste0( '<p>', sprintf(
-        "<div style='font-size:12px;width:200px;float:left'>
-        <span style='font-size:12px;font-weight:bold'>%s</span><hr>
-        Urban:Rural Ratio: %s<br/>
-        <div style='width:95%%'>
-        <span style='float:left'>Urban</span>
-        <span style='float:right'>Rural</span>
-        <br/>
-        <span style='color:#2aa1ec;float:left'>%s%%</span>
-        <span style='color:#fe6a59;float:right'>%s%%</span><br clear='all'/>
-        <span style='background:#2aa1ec;width:%s%%;float:left'>&nbsp;</span>
-        <span style='background:#fe6a59;width:%s%%;float:right'>&nbsp;</span><hr>
-        <span style='float:left'>Urban Population: </span>
-        <span style='float:right'>%s</span><br/>
-        <span style='float:left'>Rural Population: </span>
-        <span style='float:right'>%s</span><br/>
-        <span style='float:left'>Total Population: </span>
-        <span style='float:right'>%s</span>
-        </div>
-        </div>",
-        states@data[i, "State.Name"],
-        states@data[i, "Urban Rural Ratio"],
-        nums[1],nums[2],
-        nums[1],nums[2],
-        format(states@data[i, "Urban Population"], big.mark=","), format(states@data[i, "Rural Population"], big.mark=","), format(states@data[i, "Population"], big.mark=",")
-      ), '</p>' ) 
-})
-
-mapspalette <- colorNumeric(
-  palette = "YlOrRd",
-  reverse = T,
-  domain = as.numeric(plotSubset@data$`Urban Rural Ratio`)
-)
-
-map <- leaflet(width = "100%") %>%
-  addProviderTiles("Esri") %>% 
   addPolygons(
     data = states,
     color = "#000000", 
     weight = 1, smoothFactor = 0.5,
     opacity = 1.0, fillOpacity = 0.8,
     dashArray = "3",
-    fillColor = ~mapspalette(as.numeric(states$`Urban Rural Ratio`)),
-    label = lapply(hoverlabels, htmltools::HTML),
+    fillColor = ~mapspaletteUR(as.numeric(states$`Urban Rural Ratio`)),
+    label = lapply(hoverlabelsUR, htmltools::HTML),
     labelOptions = labelOptions(
-      offset=c(-100,-140),
       textOnly = T,
       style=list(
         'background'='rgba(255,255,255,0.95)',
@@ -400,20 +378,78 @@ map <- leaflet(width = "100%") %>%
     highlightOptions = highlightOptions(color = "white", weight = 2),
               group = "Urban:Rural") %>%
   
-  addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
+  addMiniMap(tiles = providers$Esri, toggleDisplay = T) %>% 
   addScaleBar() %>%
-  addSimpleGraticule(showOriginLabel = TRUE) %>%
-  legendreverse("bottomleft", pal = mapspalette, values = as.numeric(plotSubset$`Urban Rural Ratio`), decreasing = T, opacity = 1, title = "Urban:Rural", group = "Urban:Rural", layerId = "Urban:Rural" )
+  addSimpleGraticule(showOriginLabel = T) %>%
+  addLegend("bottomleft", pal = mapspalettePopD, values = plotSubset$`Density (per sqkm)`, title = "Population Density", opacity = 1) %>%
+  addLegend("bottomleft", pal = mapspalettePOPG, values = plotSubset$`Decadal Growth%(2001-2011)`, title = "Population Growth %", opacity = 1, group = "Population Growth %", layerId = "Population Growth %" ) %>%
+  legendreverse("bottomleft", pal = mapspaletteLit, values = plotSubset$`Literacy Rate (%)`, title = "Literacy Rate %", opacity = 1, group = "Literacy Rate %", layerId = "Literacy Rate %" , decreasing = T) %>% 
+  legendreverse("bottomleft", pal = mapspaletteGR, values = plotSubset$`Gender Ratio`, opacity = 1, decreasing = T, title = "Gender Ratio", group = "Gender Ratio", layerId = "Gender Ratio" ) %>%
+  legendreverse("bottomleft", pal = mapspaletteUR, values = as.numeric(plotSubset$`Urban Rural Ratio`), decreasing = T, opacity = 1, title = "Urban:Rural", group = "Urban:Rural", layerId = "Urban:Rural" ) %>%
 
-css_fix <- "div.info.legend.leaflet-control br {clear: both;}"
-map <- map %>% prependContent(tags$style(type = "text/css", css_fix))
+htmlwidgets::onRender("
+    function(el, x) {
+      var myMap = this;
+      myMap.on('baselayerchange',
+        function (e) {
+          document.getElementById('countryInfo').innerHTML = lookupCountryInfo(e.name);
+          descendents = document.getElementsByClassName('leaflet-control')
+          for(var i=0; i<descendents.length; i++) {
+            if(descendents[i].className == 'info legend leaflet-control') {
+              if (descendents[i].innerHTML.indexOf(e.name) != -1) {
+                descendents[i].style.display = 'block';
+              } else {
+                descendents[i].style.display = 'none';
+              }
+            }
+          }
+        })
+
+      myMap.on('tooltipopen',
+        function (e) {
+          document.getElementById('stateInfo').innerHTML = e.tooltip._content;
+          $('.leaflet-tooltip').css('display','none');
+        })
+
+      myMap.on('tooltipclose',
+        function (e) {
+          document.getElementById('stateInfo').innerHTML = '';
+        })
+    }") %>% 
   
-map
+  addLayersControl(
+    baseGroups = c("Population Density", "Population Growth %", "Literacy Rate %", "Gender Ratio", "Urban:Rural"),
+    options = layersControlOptions(collapsed = FALSE)
+  )
 
+
+
+  # leafem::addHomeButton(ext = bbox([]))
+
+  css_fix <- "div.info.legend.leaflet-control br {clear: both;}"
+  map <- map %>% prependContent(tags$style(type = "text/css", css_fix))  
+
+  map
+  
 ```
-*2011 Census and State/UT boundaries
+<font size="1">*2011 Census and State/UT boundaries<br/>
+Source: <br/>
+[1]https://en.wikipedia.org/wiki/Demographics_of_India<br/>
+[2]https://en.wikipedia.org/wiki/Geography_of_India
+</font>
+</div>
+</div>
+<div class = "col-md-3">
+<div class = "row"  style = "margin-left: 10px">
+<h2><b>India</b></h2></br>
+<div id = "countryInfo">
+</div><br>
+<div id = "stateInfo">
+</div>
+</div>
+</div>
 
-### Data
+### Data^[1]^
 
 ```{r}
 library(DT)
@@ -424,7 +460,11 @@ col2cnvrt2 <- c(0, 4:17) #because !#$@# columnDefs indexes from 0
 populationData[,col2cnvrt] <- lapply(populationData[,col2cnvrt],function(x){format(round(as.numeric(x), 2), big.mark=",")})
 datatable(populationData, rownames = FALSE, options = list(pageLength = 35, columnDefs = list(list(className = 'dt-right', targets = col2cnvrt2))))
 ```
-
-Source: https://en.wikipedia.org/wiki/Demographics_of_India#Census_of_India:_sample_registration_system
+<font size="1">
+Source: 
+[1]https://en.wikipedia.org/wiki/Demographics_of_India</font>
 
 ### Info
+```{r}
+sessionInfo()
+```

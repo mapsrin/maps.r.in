@@ -24,8 +24,8 @@ library(sp)
 library(htmlwidgets)
 library(htmltools) 
 
-states <- readOGR("data/IndiaAdminUnits/States.shp", stringsAsFactors = FALSE)
-states <- states[order(states$State.Name),]
+states <- readRDS("data/IndiaAdminUnits/States_Aug2019_simplified_1.rds")
+states <- states[order(as.numeric(states$ID_1)),]
 
 colourIndex = c(2,4,3,4,1,1,1,1,1,3,3,2,4,3,4,4,1,4,1,1,3,4,2,3,3,1,3,1,2,1,3,2,2,1,2,1,2,5)
 
@@ -37,8 +37,10 @@ colors4 <- c("#3300FF", "#CCFF00", "#00B3FF", "#FF0000", "#999999")
 ```
 
 ## {.tabset}
-### States and Union Territories of India*
+### States and Union Territories of India^[1]^
 
+<div class = "col-md-8">
+<div class = "row">
 ```{r, echo=FALSE, warning=F}
 
 labelsInfo <- lapply(seq(nrow(states@data)), function(i) {
@@ -46,17 +48,18 @@ labelsInfo <- lapply(seq(nrow(states@data)), function(i) {
     paste0( '<p>', sprintf(
        "<div style='width:95%%'>
         <div style='font-size:12px;width:200px;float:left'>
-        <span style='font-size:12px;font-weight:bold'>%s</span><hr>
+        <span style='font-size:12px;font-weight:bold'>%s</span><br/>
         <span style='float:left'>Area : %s (sqkm)</span><br/>
         <span style='float:left'>Type : %s </span><br/>
         </div>
         </div>",
-        states@data[i, "State.Name"],
+        states@data[i, "State...UT"],
         states@data[i, "Area (sqkm)"],
-        states@data[i, "TYPE"])
+        states@data[i, "Type"])
       , '</p>' )
   }
 })
+
 
 map <- leaflet(width = "100%") %>% 
   addProviderTiles("Esri") %>% 
@@ -70,20 +73,55 @@ map <- leaflet(width = "100%") %>%
               highlightOptions = highlightOptions(color = "white", weight = 2)) %>%
   addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
   addScaleBar() %>%
-  addSimpleGraticule(showOriginLabel = TRUE)
+  leafem::addMouseCoordinates() %>%
+  addSimpleGraticule(showOriginLabel = TRUE)%>%
+  htmlwidgets::onRender("
+    function(el, x) {
+      var myMap = this;
+      myMap.on('tooltipopen',
+        function (e) {
+          $('.leaflet-tooltip').css('display','none');
+          document.getElementById('stateInfo').innerHTML = e.tooltip._content;
+        })
+      myMap.on('tooltipclose',
+        function (e) {
+          document.getElementById('stateInfo').innerHTML = '';
+        })
+    }")
 map
 ```
-*As of August 2019
+<font size='1'>*As of August 2019<br/>
+Sources:<br/>
+[1] https://en.wikipedia.org/wiki/Geography_of_India <br/>
+[2] https://en.wikipedia.org/wiki/List_of_states_and_union_territories_of_India_by_area
+</font>
+</div>
+</div>
+<div class = "col-md-3">
+<div class = "row"  style = "margin-left: 10px">
+<div id = "countryInfo">
+<h2><b>India</b></h2>
+<h5>Total area: 3.287 million sqkm<sup>[2]</sup> </h5>
+</div>
+<div id = "stateInfo">
+</div>
+</div>
+</div>
 
-### Data
-
+### Data^[1]^
 ```{r}
 #Here Column indices start from 0 !#$$!@#
 library(DT)
-datatable(states@data, rownames = FALSE, options = list(pageLength = 38, columnDefs = list(list(className = 'dt-right', targets = 2))))
+datatable(states@data, rownames = FALSE, options = list(pageLength = 38, columnDefs = list(list(className = 'dt-right', targets = 3))))
 ```
+<font size='1'>
+Sources:<br/>
+[1] https://en.wikipedia.org/wiki/Geography_of_India <br>
+[2] https://en.wikipedia.org/wiki/List_of_states_and_union_territories_of_India_by_area
+</font>
 
 ### Info
+```{r}
+sessionInfo()
+```
 
-Shape files from:
-Demo of 4 colour theorem
