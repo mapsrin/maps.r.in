@@ -15,7 +15,7 @@ output: html_document
     var result = "";
 
     var lookup = {
-      "Population Density": "<p><div style='width:95%%'><div style='font-size:12px;width:200px;float:left'><span style='float:left'>Population:</span><span style='float:right'> 1,210,854,977 </span><br/><span style='float:left'>Area (sqkm):</span><span style='float:right'> 3,287,240<sup>[2]</sup> </span><br/><span style='float:left'>Population Density:</span><span style='float:right'> 382 per sqkm</span></div></div></p>",
+      "Population Density (/sqkm)": "<p><div style='width:95%%'><div style='font-size:12px;width:200px;float:left'><span style='float:left'>Population:</span><span style='float:right'> 1,210,854,977 </span><br/><span style='float:left'>Area (sqkm):</span><span style='float:right'> 3,287,240<sup>[2]</sup> </span><br/><span style='float:left'>Population Density:</span><span style='float:right'> 382/sqkm</span></div></div></p>",
       
       "Population Growth %": "<p><div style='width:95%%'><div style='font-size:12px;width:200px;float:left'><span style='float:left'>Population Growth:</span><span style='float:right'> 17.64 %%</span><br/><span style='float:left'>Population:</span><span style='float:right'> 1,210,854,977</span></div></div></p>",
       
@@ -111,14 +111,6 @@ states@data <- cbind(states@data,  populationData[,3:18])
 
 plotSubset <- subset(states, states$`Area (sqkm)` > 1500)
 
-```
-
-## {.tabset}
-### Population Density^[1]^
-
-<div class = "col-md-8">
-<div class = "row">
-```{r, echo=FALSE, warning=F}
 #Hover content
 hoverlabelsPopD <- lapply(seq(nrow(states@data)), function(i) {
   if (is.na(states@data[i, "Population"])) {
@@ -135,7 +127,7 @@ hoverlabelsPopD <- lapply(seq(nrow(states@data)), function(i) {
         <span style='float:left'>Area (sqkm):</span>
         <span style='float:right'> %s (%s%%)</span><br/>
         <span style='float:left'>Population Density:</span>
-        <span style='float:right'> %s per sqkm</span>
+        <span style='float:right'> %s/sqkm</span>
         </div>
         </div>",
         states@data[i, "State...UT"],
@@ -264,6 +256,14 @@ hoverlabelsUR <- lapply(seq(nrow(states@data)), function(i) {
       ), '</p>' ) 
 })
 
+```
+
+## {.tabset}
+### Population Density^[1]^
+
+<div class = "col-md-8">
+<div class = "row">
+```{r, echo=FALSE, warning=F}
 mapspalettePopD <- colorNumeric(
   palette = "YlOrRd",
   domain = plotSubset$`Density (per sqkm)`
@@ -302,16 +302,8 @@ map <- leaflet(width = "100%") %>%
               dashArray = "3",
               fillColor = ~mapspalettePopD(states$`Density (per sqkm)`),
               label = lapply(hoverlabelsPopD, htmltools::HTML),
-              labelOptions = labelOptions(
-                textOnly = T,
-                style=list(
-                  'background'='rgba(255,255,255,0.95)',
-                  'border-color' = 'rgba(0,0,0,1)',
-                  'border-radius' = '10px',
-                  'border-style' = 'solid',
-                  'border-width' = '2px')),
               highlightOptions = highlightOptions(color = "white", weight = 2),
-              group = "Population Density") %>%
+              group = "Population Density (/sqkm)") %>%
   
   addPolygons(data = states,
               color = "#000000", 
@@ -320,14 +312,6 @@ map <- leaflet(width = "100%") %>%
               dashArray = "3",
               fillColor = ~mapspalettePOPG(states$`Decadal Growth%(2001-2011)`),
               label = lapply(hoverlabelsPopG, htmltools::HTML),
-              labelOptions = labelOptions(
-                textOnly = T,
-                style=list(
-                  'background'='rgba(255,255,255,0.95)',
-                  'border-color' = 'rgba(0,0,0,1)',
-                  'border-radius' = '10px',
-                  'border-style' = 'solid',
-                  'border-width' = '2px')),
               highlightOptions = highlightOptions(color = "white", weight = 2),
               group = "Population Growth %") %>%
   
@@ -338,14 +322,6 @@ map <- leaflet(width = "100%") %>%
               dashArray = "3",
               fillColor = ~mapspaletteLit(states$`Literacy Rate (%)`),
               label = lapply(hoverlabelsLit, htmltools::HTML),
-              labelOptions = labelOptions(
-                textOnly = T,
-                style=list(
-                  'background'='rgba(255,255,255,0.95)',
-                  'border-color' = 'rgba(0,0,0,1)',
-                  'border-radius' = '10px',
-                  'border-style' = 'solid',
-                  'border-width' = '2px')),
               highlightOptions = highlightOptions(color = "white", weight = 2),
               group = "Literacy Rate %") %>%
   
@@ -356,14 +332,6 @@ map <- leaflet(width = "100%") %>%
               dashArray = "3",
               fillColor = ~mapspaletteGR(as.numeric(states$`Gender Ratio`)),
               label = lapply(hoverlabelsGR, htmltools::HTML),
-              labelOptions = labelOptions(
-                textOnly = T,
-                style=list(
-                  'background'='rgba(255,255,255,0.95)',
-                  'border-color' = 'rgba(0,0,0,1)',
-                  'border-radius' = '10px',
-                  'border-style' = 'solid',
-                  'border-width' = '2px')),
               highlightOptions = highlightOptions(color = "white", weight = 2),
               group = "Gender Ratio") %>%
   
@@ -375,25 +343,17 @@ map <- leaflet(width = "100%") %>%
     dashArray = "3",
     fillColor = ~mapspaletteUR(as.numeric(states$`Urban Rural Ratio`)),
     label = lapply(hoverlabelsUR, htmltools::HTML),
-    labelOptions = labelOptions(
-      textOnly = T,
-      style=list(
-        'background'='rgba(255,255,255,0.95)',
-        'border-color' = 'rgba(0,0,0,1)',
-        'border-radius' = '10px',
-        'border-style' = 'solid',
-        'border-width' = '2px')),
     highlightOptions = highlightOptions(color = "white", weight = 2),
               group = "Urban:Rural") %>%
   
   addMiniMap(tiles = providers$Esri, toggleDisplay = T) %>% 
   addScaleBar() %>%
   addSimpleGraticule(showOriginLabel = T) %>%
-  addLegend("bottomleft", pal = mapspalettePopD, values = plotSubset$`Density (per sqkm)`, title = "Population Density", opacity = 1) %>%
-  addLegend("bottomleft", pal = mapspalettePOPG, values = plotSubset$`Decadal Growth%(2001-2011)`, title = "Population Growth %", opacity = 1, group = "Population Growth %", layerId = "Population Growth %" ) %>%
-  legendreverse("bottomleft", pal = mapspaletteLit, values = plotSubset$`Literacy Rate (%)`, title = "Literacy Rate %", opacity = 1, group = "Literacy Rate %", layerId = "Literacy Rate %" , decreasing = T) %>% 
-  legendreverse("bottomleft", pal = mapspaletteGR, values = plotSubset$`Gender Ratio`, opacity = 1, decreasing = T, title = "Gender Ratio", group = "Gender Ratio", layerId = "Gender Ratio" ) %>%
-  legendreverse("bottomleft", pal = mapspaletteUR, values = as.numeric(plotSubset$`Urban Rural Ratio`), decreasing = T, opacity = 1, title = "Urban:Rural", group = "Urban:Rural", layerId = "Urban:Rural" ) %>%
+  addLegend("bottomleft", pal = mapspalettePopD, values = plotSubset$`Density (per sqkm)`, title = "Population Density (/sqkm)", opacity = 1) %>%
+  addLegend("bottomleft", pal = mapspalettePOPG, values = plotSubset$`Decadal Growth%(2001-2011)`, title = "Population Growth %", opacity = 1) %>%
+  legendreverse("bottomleft", pal = mapspaletteLit, values = plotSubset$`Literacy Rate (%)`, title = "Literacy Rate %", opacity = 1, decreasing = T) %>% 
+  legendreverse("bottomleft", pal = mapspaletteGR, values = plotSubset$`Gender Ratio`, opacity = 1, decreasing = T, title = "Gender Ratio") %>%
+  legendreverse("bottomleft", pal = mapspaletteUR, values = as.numeric(plotSubset$`Urban Rural Ratio`), decreasing = T, opacity = 1, title = "Urban:Rural") %>%
 
 htmlwidgets::onRender("
     function(el, x) {
@@ -426,7 +386,7 @@ htmlwidgets::onRender("
     }") %>% 
   
   addLayersControl(
-    baseGroups = c("Population Density", "Population Growth %", "Literacy Rate %", "Gender Ratio", "Urban:Rural"),
+    baseGroups = c("Population Density (/sqkm)", "Population Growth %", "Literacy Rate %", "Gender Ratio", "Urban:Rural"),
     options = layersControlOptions(collapsed = FALSE)
   )
 

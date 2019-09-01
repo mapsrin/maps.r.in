@@ -34,15 +34,6 @@ areas <- c("8,249", "162,970", "83,743", "78,438", "94,165", "114", "135,191", "
 states[["Area (sqkm)"]] <- areas
 colors4 <- c("#3300FF", "#CCFF00", "#00B3FF", "#FF0000", "#999999")
 
-```
-
-## {.tabset}
-### States and Union Territories of India^[1]^
-
-<div class = "col-md-8">
-<div class = "row">
-```{r, echo=FALSE, warning=F}
-
 labelsInfo <- lapply(seq(nrow(states@data)), function(i) {
   if(i<38) {
     paste0( '<p>', sprintf(
@@ -60,7 +51,14 @@ labelsInfo <- lapply(seq(nrow(states@data)), function(i) {
   }
 })
 
+```
 
+## {.tabset}
+### States and Union Territories of India^[1]^
+
+<div class = "col-md-8">
+<div class = "row">
+```{r, echo=FALSE, warning=F}
 map <- leaflet(width = "100%") %>% 
   addProviderTiles("Esri") %>% 
   addPolygons(data = states, 
