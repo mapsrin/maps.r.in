@@ -311,7 +311,7 @@ htmlwidgets::onRender("
     }") %>% 
   
   addLayersControl(
-    baseGroups = c("Population Density (/sqkm)", "Population Growth %", "Literacy Rate %", "Gender Ratio", "Urban:Rural"),
+    baseGroups = c("Population Density (/sqkm)", "Population Growth %", "Literacy Rate %", "Gender Ratio"),
     options = layersControlOptions(collapsed = FALSE)
   )
 
