@@ -18,8 +18,6 @@ output: html_document
       
       "Population Growth %": "<p><div style='width:95%%'><div style='font-size:12px;width:200px;float:left'><span style='float:left'>Population Growth:</span><span style='float:right'> 17.64 %%</span><br/><span style='float:left'>Population:</span><span style='float:right'> 1,210,854,977</span></div></div></p>",
       
-      "Literacy Rate %": "<p><div style='width:95%%'><div style='font-size:12px;width:200px;float:left'><span style='float:left'>Literacy Rate:</span><span style='float:right'> 74.04 %</span><br/><span style='float:left'>Population:</span><span style='float:right'> 1,210,854,977</span><br/><span style='float:left'>Non-literate:</span><span style='float:right'> ~314,337,952</span></div></div></p>",
-      
       "Gender Ratio": "<p><div style='font-size:12px;width:200px;float:left'><span style='font-size:12px;'>Gender Ratio: 943 f/1000m<br/><div style='width:95%%'><span style='float:left'>Males</span><span style='float:right'>Females</span><br/><span style='color:#2aa1ec;float:left'>52%%</span><span         style='color:#fe6a59;float:right'>48%%</span><br clear='all'/><span style='background:#2aa1ec;width:52%;float:left'>&nbsp;</span><span style='background:#fe6a59;width:48%;float:right'>&nbsp;</span><br clear='all'/><span style='float:left'>Males: </span><span style='float:right'>623,724,248</span><br/><span style='float:left'>Females: </span><span style='float:right'>586,469,174</span><br/><span style='float:left'>Difference: </span><span style='float:right'>37,255,074</span></div></div></p>"
     };
   
@@ -53,7 +51,6 @@ library(sp)
 
 wb <- loadWorkbook("data/Demographics/DistrictwiseTotalPopulation.xlsx")
 populationData <- readWorksheet(wb, sheet = "TotalPopulation", header = TRUE)
-populationData <- populationData[-1,]
 populationData <- populationData[order(populationData$District),]
 populationData[nrow(populationData)+2,] <- NA
 
@@ -106,9 +103,9 @@ hoverlabelsPop <- lapply(seq(nrow(districts@data)), function(i) {
         <span style='float:right'> %s /sqkm</span>
         </div>
         </div>",
-        districts@data[i, "DISTRICT"],
+        districts@data$DISTRICT[i],
         format(districts@data$Total.Population[i], big.mark=","),
-        format(districts@data$Area..sqkm[i], big.mark=","),
+        format(districts@data$Area..sqkm. [i], big.mark=","),
         round(districts@data$Total.Population[i]/districts@data$Area..sqkm[i],2)
       ), '</p>' ) 
 })
@@ -117,7 +114,7 @@ hoverlabelsPopG <- lapply(seq(nrow(districts@data)), function(i) {
   if (is.na(districts@data$Total.Population[i])) {
     return(paste0('<p>', sprintf(
         "<div style='font-size:12px;width:200px;float:left'>
-        <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/></div>",         districts@data[i, "DISTRICT"])))
+        <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/></div>",         districts@data$DISTRICT[i])))
   }
   paste0( '<p>', sprintf(
         "<div style='font-size:12px;width:200px;float:left'>
@@ -135,32 +132,13 @@ hoverlabelsPopG <- lapply(seq(nrow(districts@data)), function(i) {
       ), '</p>' ) 
 })
 
-hoverlabelsLit <- lapply(seq(nrow(districts@data)), function(i) {
-  if (is.na(districts@data$Literates[i])) {
-    return(paste0('<p>', sprintf(
-        "<div style='font-size:12px;width:200px;float:left'>
-        <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/>",         districts@data[i, "State...U"])))
-  }
-  paste0( '<p>', sprintf(
-        "<div style='font-size:12px;width:200px;float:left'>
-        <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/>
-        <div style='width:95%%'>
-        <span style='float:left'>Literacy Rate:</span>
-        <span style='float:right'> %s (%%)</span><br/>
-        </div>
-        </div>",
-        districts@data$DISTRICT[i],
-        districts@data$Literacy.Rate..[i]
-      ), '</p>' ) 
-})
-
 hoverlabelsGR <- lapply(seq(nrow(districts@data)), function(i) {
-  if (is.na(districts@data$Col5[i]) || is.na(districts@data$Col6[i])) {
+  if (is.na(districts@data$TPM[i]) || is.na(districts@data$TPF[i])) {
     return(paste0('<p>', sprintf(
         "<div style='font-size:12px;width:200px;float:left'>
         <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/></div>",         districts@data$DISTRICT[i])))
   }
-  nums <- round_percent(c(100*districts@data$Col5[i]/districts@data$Total.Population[i],100*districts@data$Col6[i]/districts@data$Total.Population[i]))
+  nums <- round_percent(c(100*districts@data$TPM[i]/districts@data$Total.Population[i],100*districts@data$TPF[i]/districts@data$Total.Population[i]))
   paste0( '<p>', sprintf(
         "<div style='font-size:12px;width:200px;float:left'>
         <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/>
@@ -182,10 +160,10 @@ hoverlabelsGR <- lapply(seq(nrow(districts@data)), function(i) {
         </div>
         </div>",
         districts@data$DISTRICT[i],
-        districts@data$Gender.Ratio[i],
+        districts@data$Gender.Ratio..1000[i],
         nums[1], nums[2],
         nums[1], nums[2],
-        format(districts@data$Col5[i], big.mark=","), format(districts@data$Col6[i], big.mark=","), format(districts@data$Col5[i] - districts@data$Col6[i], big.mark=",")
+        format(districts@data$TPM[i], big.mark=","), format(districts@data$TPF[i], big.mark=","), format(districts@data$TPM[i] - districts@data$TPF[i], big.mark=",")
       ), '</p>' ) 
 })
 ```
@@ -205,14 +183,10 @@ mapspalettePopG <- colorQuantile(
   domain = districts@data$Population.Growth.., n = 7, right = TRUE
 )
 
-mapspaletteLit  <- colorNumeric(
-  palette = "Blues",
-  domain = districts@data$Literacy.Rate..)
-
 mapspaletteGR <- colorQuantile(
   palette = YlOrBr,
   reverse = T,
-  domain = districts@data$Gender.Ratio, n = 7, right = TRUE
+  domain = districts@data$Gender.Ratio..1000, n = 7, right = TRUE
 )
 
 map <- leaflet(width = "100%") %>% 
@@ -244,25 +218,16 @@ map <- leaflet(width = "100%") %>%
               weight = 1, smoothFactor = 0.5,
               opacity = 1.0, fillOpacity = 0.8,
               dashArray = "3",
-              fillColor =  ~mapspaletteLit(districts@data$Literacy.Rate..),
-              label = lapply(hoverlabelsLit, htmltools::HTML),
-              highlightOptions = highlightOptions(color = "white", weight = 2),
-              group = "Literacy Rate %") %>%
-  
-  addPolygons(data = districts,
-              color = "#000000", 
-              weight = 1, smoothFactor = 0.5,
-              opacity = 1.0, fillOpacity = 0.8,
-              dashArray = "3",
-              fillColor = ~mapspaletteGR(as.numeric(districts@data$Gender.Ratio)),
+              fillColor = ~mapspaletteGR(as.numeric(districts@data$Gender.Ratio..1000)),
               label = lapply(hoverlabelsGR, htmltools::HTML),
               highlightOptions = highlightOptions(color = "white", weight = 2),
-              group = "Gender Ratio") %>%
+              group = "Gender Ratio (/1000)") %>%
   
   addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
   addScaleBar() %>%
   leafem::addMouseCoordinates() %>%
   addSimpleGraticule(showOriginLabel = TRUE) %>%
+  
   addLegend("bottomleft", pal = mapspalettePop, values = districts@data$Total.Population/districts@data$Area..sqkm., title = "Population Density (/sqkm)", opacity = 1, labFormat = function(type, cuts, p) {
   n = length(cuts)
   p = paste0(round(p * 100), '%')
@@ -273,9 +238,7 @@ map <- leaflet(width = "100%") %>%
   p = paste0(round(p * 100), '%')
   cuts = paste0(round(cuts[-1],0))}) %>%
   
-  legendreverse("bottomleft", pal = mapspaletteLit, values = districts@data$Literacy.Rate.., title = "Literacy Rate %", opacity = 1, decreasing = T) %>%
-  
-  legendreverse("bottomleft", pal = mapspaletteGR, values = districts@data$Gender.Ratio, opacity = 1, decreasing = T, title = "Gender Ratio", labFormat = function(type, cuts, p) {
+  legendreverse("bottomleft", pal = mapspaletteGR, values = districts@data$Gender.Ratio..1000, opacity = 1, decreasing = T, title = "Gender Ratio (/1000)", labFormat = function(type, cuts, p) {
   n = length(cuts)
   p = paste0(round(p * 100), '%')
   cuts = paste0(round(cuts[-1],0))}) %>%
@@ -311,7 +274,7 @@ htmlwidgets::onRender("
     }") %>% 
   
   addLayersControl(
-    baseGroups = c("Population Density (/sqkm)", "Population Growth %", "Literacy Rate %", "Gender Ratio"),
+    baseGroups = c("Population Density (/sqkm)", "Population Growth %", "Gender Ratio (/1000)"),
     options = layersControlOptions(collapsed = FALSE)
   )
 

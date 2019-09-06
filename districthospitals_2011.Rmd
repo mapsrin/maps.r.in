@@ -1,0 +1,329 @@
+---
+output: html_document
+---
+
+<style>
+    body .main-container {
+        max-width: 100%;
+        padding: 0;
+        margin: 0;
+    }
+</style>
+<script>
+  function lookupCountryInfo(val) {
+    var result = "";
+
+    var lookup = {
+      "PHCs /10000": "<p><div style='width:95%%'><div style='font-size:12px;width:200px;float:left'><span style='float:left'>Population:</span><span style='float:right'> 1,210,854,977 </span><br/><span style='float:left'>Area (sqkm):</span><span style='float:right'> 3,287,240<sup>[2]</sup> </span><br/><span style='float:left'>Total PHCs:</span><span style='float:right'> 23,790<sup>[3]</sup> </span><br/><span style='float:left'>PHCs /10000:</span><span style='float:right'> 0.2</span></div></div></p>",
+      
+      "PHCs /100sqkm": "<p><div style='width:95%%'><div style='font-size:12px;width:200px;float:left'><span style='float:left'>Population:</span><span style='float:right'> 1,210,854,977 </span><br/><span style='float:left'>Area (sqkm):</span><span style='float:right'> 3,287,240<sup>[2]</sup> </span><br/><span style='float:left'>Total PHCs:</span><span style='float:right'> 23,790<sup>[3]</sup> </span><br/><span style='float:left'>PHCs /100sqkm:</span><span style='float:right'> 0.75</span></div></div></p>",
+      
+      "Access Factor": "<p><div style='width:95%%'><div style='font-size:12px;width:200px;float:left'><span style='float:left'>Population:</span><span style='float:right'> 1,210,854,977 </span><br/><span style='float:left'>Area (sqkm):</span><span style='float:right'> 3,287,240<sup>[2]</sup> </span><br/><span style='float:left'>Total PHCs:</span><span style='float:right'> 23,790<sup>[3]</sup> </span><br/><span style='float:left'>PHCs /10000:</span><span style='float:right'> 0.2</span><br/><span style='float:left'>PHCs /100sqkm:</span><span style='float:right'> 0.72</span><br/><span style='float:left'>Access Factor:</span><span style='float:right'> Low</span></div></div></p>"
+    };
+  
+    result = lookup[val];
+  
+    return result;
+  }
+  
+  window.onload = function () {
+    document.getElementById("countryInfo").innerHTML = lookupCountryInfo("PHCs /10000");
+    descendents = document.getElementsByClassName('leaflet-control');
+    for(var i=0; i<descendents.length; i++) {
+      if(descendents[i].className == 'info legend leaflet-control') {
+        if (descendents[i].innerHTML.indexOf("PHCs /10000") != -1) {
+          descendents[i].style.display = 'block';
+        } else {
+          descendents[i].style.display = 'none';
+        }
+      }
+    }
+  }
+</script>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+```{r, echo=FALSE, message=F, warning=F, results = 'hide'}
+options(java.parameters = "-Xmx4g" )
+library(XLConnect)
+library(sp)
+
+wb <- loadWorkbook("data/Demographics/DistrictwiseTotalPopulation.xlsx")
+populationData <- readWorksheet(wb, sheet = "HospitalCount", header = TRUE)
+populationData <- populationData[order(populationData$District),]
+populationData[nrow(populationData)+2,] <- NA
+
+districts <- readRDS("data/IndiaAdminUnits/Districts_2011_simplified.rds")
+districts <- districts[order(as.numeric(districts$censuscode)),]
+
+districts@data <- cbind(districts@data,  populationData[,])
+
+```
+
+```{r, echo=FALSE, message=F, warning=F, results = 'hide'}
+library(leaflet)
+library(leaflet.extras)
+library(leaflet.minicharts)
+library(ggmap)
+library(raster)
+library(htmltools)
+library(htmlwidgets)
+library(legendreverse)
+
+round_percent <- function(x) { 
+  if(!any(is.na(x))) {
+    x <- x/sum(x)*100  # Standardize result
+    res <- floor(x)    # Find integer bits
+    rsum <- sum(res)   # Find out how much we are missing
+    if(rsum<100) { 
+        # Distribute points based on remainders and a random tie breaker
+        o <- order(x%%1, sample(length(x)), decreasing=TRUE) 
+        res[o[1:(100-rsum)]] <- res[o[1:(100-rsum)]]+1
+    } 
+    res 
+  }
+}
+
+hoverlabelsPerCapPHCs <- lapply(seq(nrow(districts@data)), function(i) {
+  if (is.na(districts@data$Number.of..Primary.Health.Centres[i])) {
+    return(paste0('<p>', sprintf(
+        "<div style='font-size:12px;width:200px;float:left'>
+        <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/>",         districts@data$DISTRICT[i])))
+  }
+  paste0( '<p>', sprintf(
+        "<div style='font-size:12px;width:200px;float:left'>
+        <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/>
+        <div style='width:95%%'>
+        <span style='float:left'>Population:</span>
+        <span style='float:right'> %s </span><br/>
+        <span style='float:left'>Area (sqkm):</span>
+        <span style='float:right'> %s </span><br/>
+        <span style='float:left'>PHCs:</span>
+        <span style='float:right'> %s </span><br/>
+        <span style='float:left'>PHCs/10000:</span>
+        <span style='float:right'> %s </span>
+        </div>
+        </div>",
+        districts@data$DISTRICT[i],
+        format(districts@data$Total.Population[i], big.mark=","),
+        format(districts@data$Area..sqkm[i], big.mark=","),
+        districts@data$Number.of..Primary.Health.Centres[i],
+        districts@data$PHCsperCapita[i]
+      ), '</p>' ) 
+})
+
+hoverlabelsPerAreaPHCs <- lapply(seq(nrow(districts@data)), function(i) {
+  if (is.na(districts@data$Number.of..Primary.Health.Centres[i])) {
+    return(paste0('<p>', sprintf(
+        "<div style='font-size:12px;width:200px;float:left'>
+        <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/>",         districts@data$DISTRICT[i])))
+  }
+  paste0( '<p>', sprintf(
+        "<div style='font-size:12px;width:200px;float:left'>
+        <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/>
+        <div style='width:95%%'>
+        <span style='float:left'>Population:</span>
+        <span style='float:right'> %s </span><br/>
+        <span style='float:left'>Area (sqkm):</span>
+        <span style='float:right'> %s </span><br/>
+        <span style='float:left'>PHCs:</span>
+        <span style='float:right'> %s </span><br/>
+        <span style='float:left'>PHCs/100sqkm:</span>
+        <span style='float:right'> %s </span>
+        </div>
+        </div>",
+        districts@data$DISTRICT[i],
+        format(districts@data$Total.Population[i], big.mark=","),
+        format(districts@data$Area..sqkm[i], big.mark=","),
+        districts@data$Number.of..Primary.Health.Centres[i],
+        districts@data$PHCsperArea[i]
+      ), '</p>' ) 
+})
+
+hoverlabelsPerCapAreaPHCs <- lapply(seq(nrow(districts@data)), function(i) {
+  if (is.na(districts@data$Number.of..Primary.Health.Centres[i])) {
+    return(paste0('<p>', sprintf(
+        "<div style='font-size:12px;width:200px;float:left'>
+        <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/>",         districts@data$DISTRICT[i])))
+  }
+  paste0( '<p>', sprintf(
+        "<div style='font-size:12px;width:200px;float:left'>
+        <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/>
+        <div style='width:95%%'>
+        <span style='float:left'>Population:</span>
+        <span style='float:right'> %s </span><br/>
+        <span style='float:left'>Area (sqkm):</span>
+        <span style='float:right'> %s </span><br/>
+        <span style='float:left'>PHCs:</span>
+        <span style='float:right'> %s </span><br/>
+        <span style='float:left'>PHCs/100sqkm:</span>
+        <span style='float:right'> %s </span><br/>
+        <span style='float:left'>PHCs/100sqkm:</span>
+        <span style='float:right'> %s </span>
+        </div>
+        </div>",
+        districts@data$DISTRICT[i],
+        format(districts@data$Total.Population[i], big.mark=","),
+        format(districts@data$Area..sqkm[i], big.mark=","),
+        districts@data$Number.of..Primary.Health.Centres[i],
+        districts@data$PHCsperCapita[i],
+        districts@data$PHCsperArea[i]
+      ), '</p>' ) 
+})
+
+```
+## {.tabset}
+### India, Districtwise Primary Health Care Centers^[1]^
+
+<div class = "col-md-8">
+<div class = "row">
+```{r, echo=FALSE, warning=F}
+YlOrBr <- c('#ffffcc', '#ffeda0', '#fed976', '#feb24c', '#fd8d3c', '#fc4e2a', '#e31a1c', '#bd0026', '#800026')
+
+mapspalettePerCapPHCs  <- colorQuantile(palette = YlOrBr,
+  domain = districts@data$PHCsperCapita, n = 7, right = TRUE)
+
+mapspalettePerAreaPHCs  <- colorQuantile(palette = YlOrBr,
+  domain = districts@data$PHCsperArea, n = 7, right = TRUE)
+
+mapspaletteProdPHCs  <- colorQuantile(palette = YlOrBr,
+  domain = districts@data$ProdPHCsCapitaArea, n = 7, right = TRUE)
+
+map <- leaflet(width = "100%") %>% 
+  addProviderTiles("Esri") %>%
+  leafem::addMouseCoordinates() %>% 
+  
+  addPolygons(data = districts,
+              color = "#000000", 
+              weight = 1, smoothFactor = 0.5,
+              opacity = 1.0, fillOpacity = 0.8,
+              dashArray = "3",
+              fillColor =  ~mapspalettePerCapPHCs(10000.0*districts@data$Number.of..Primary.Health.Centres/districts@data$Total.Population),
+              label = lapply(hoverlabelsPerCapPHCs, htmltools::HTML),
+              highlightOptions = highlightOptions(color = "white", weight = 2),
+              group = "PHCs /10000") %>%
+  
+  addPolygons(data = districts,
+              color = "#000000", 
+              weight = 1, smoothFactor = 0.5,
+              opacity = 1.0, fillOpacity = 0.8,
+              dashArray = "3",
+              fillColor =  ~mapspalettePerAreaPHCs(100.0*districts@data$Number.of..Primary.Health.Centres/districts@data$Area..sqkm.),
+              label = lapply(hoverlabelsPerAreaPHCs, htmltools::HTML),
+              highlightOptions = highlightOptions(color = "white", weight = 2),
+              group = "PHCs /100sqkm") %>%
+  
+  addPolygons(data = districts,
+              color = "#000000", 
+              weight = 1, smoothFactor = 0.5,
+              opacity = 1.0, fillOpacity = 0.8,
+              dashArray = "3",
+              fillColor =  ~mapspaletteProdPHCs(districts@data$ProdPHCsCapitaArea),
+              label = lapply(hoverlabelsPerCapAreaPHCs, htmltools::HTML),
+              highlightOptions = highlightOptions(color = "white", weight = 2),
+              group = "Access Factor") %>%
+  
+  addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
+  addScaleBar() %>%
+  leafem::addMouseCoordinates() %>%
+  addSimpleGraticule(showOriginLabel = TRUE) %>%
+  addResetMapButton() %>%
+  addSearchOSM(options = search) %>%
+  addFullscreenControl() %>% 
+  
+  legendreverse("bottomleft", pal = mapspalettePerCapPHCs, values = districts@data$PHCsperCapita, title = "PHCs /10000", opacity = 1, decreasing = T, labFormat = function(type, cuts, p) {
+  n = length(cuts)
+  p = paste0(round(p * 100), '%')
+  cuts = paste0(round(cuts[-1],2))}) %>% 
+  
+  legendreverse("bottomleft", pal = mapspalettePerAreaPHCs, values = districts@data$PHCsperArea, title = "PHCs /100sqkm", opacity = 1, decreasing = T, labFormat = function(type, cuts, p) {
+  n = length(cuts)
+  p = paste0(round(p * 100), '%')
+  cuts = paste0(round(cuts[-1],2))}) %>%
+  
+  legendreverse("bottomleft", pal = mapspaletteProdPHCs, values = districts@data$ProdPHCsCapitaArea, title = "Access Factor", opacity = 1, decreasing = T, labFormat = function(type, cuts, p) { 
+    n = length(cuts) 
+    cuts[n] = "High" 
+    for (i in 2:(n-1)){cuts[i] = ""} 
+    cuts[1] = "Low" 
+    paste0(cuts[-n], cuts[-1])}) %>%
+
+htmlwidgets::onRender("
+    function(el, x) {
+      var myMap = this;
+      myMap.on('baselayerchange',
+        function (e) {
+          document.getElementById('countryInfo').innerHTML = lookupCountryInfo(e.name);
+          descendents = document.getElementsByClassName('leaflet-control')
+          for(var i=0; i<descendents.length; i++) {
+            if(descendents[i].className == 'info legend leaflet-control') {
+              if (descendents[i].innerHTML.indexOf(e.name) != -1) {
+                descendents[i].style.display = 'block';
+              } else {
+                descendents[i].style.display = 'none';
+              }
+            }
+          }
+        })
+
+      myMap.on('tooltipopen',
+        function (e) {
+          document.getElementById('districtInfo').innerHTML = e.tooltip._content;
+          $('.leaflet-tooltip').css('display','none');
+        })
+
+      myMap.on('tooltipclose',
+        function (e) {
+          document.getElementById('districtInfo').innerHTML = '';
+        })
+    }") %>% 
+  
+  addLayersControl(
+    baseGroups = c("PHCs /10000", "PHCs /100sqkm", "Access Factor"),
+    options = layersControlOptions(collapsed = FALSE)
+  )
+
+css_fix <- "div.info.legend.leaflet-control br {clear: both;}"
+  map <- map %>% prependContent(tags$style(type = "text/css", css_fix))  
+
+map
+
+```
+<font size='1'>*2011 data and boundaries<br/>
+Sources:<br/>
+[1] http://www.censusindia.gov.in/2011census/population_enumeration.html <br/>
+[2] https://en.wikipedia.org/wiki/List_of_districts_in_India <br/>
+[3] https://data.gov.in/catalog/district-wise-availability-health-centres-india-0
+</font>
+</div>
+</div>
+<div class = "col-md-3">
+<div class = "row"  style = "margin-left: 10px">
+<h2><b>India</b></h2>
+<div id = "countryInfo">
+</div>
+<div id = "districtInfo">
+</div>
+</div>
+</div>
+
+### Data
+
+```{r}
+library(DT)
+populationData <- populationData[order(-populationData$Total.Population),]
+populationData <- populationData[-c(641,642),-c(7:12)]
+col2cnvrt2 <- c(3:15) #because !#$@# columnDefs indexes from 0
+datatable(populationData, rownames = FALSE, options = list(pageLength = 100, columnDefs = list(list(className = 'dt-right', targets = col2cnvrt2)))) %>% formatCurrency(c(3:5,8), '', digits = 0)
+
+```
+
+Source: <br/>
+[1]http://www.censusindia.gov.in/2011census/population_enumeration.html<br/>
+[2]https://data.gov.in/catalog/district-wise-availability-health-centres-india-0
+
+### Info
+```{r}
+sessionInfo()
+```
