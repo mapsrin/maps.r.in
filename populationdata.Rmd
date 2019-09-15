@@ -15,15 +15,15 @@ output: html_document
     var result = "";
 
     var lookup = {
-      "Population Density (/sqkm)": "<p><div style='width:95%%'><div style='font-size:12px;width:200px;float:left'><span style='float:left'>Population:</span><span style='float:right'> 1,210,854,977 </span><br/><span style='float:left'>Area (sqkm):</span><span style='float:right'> 3,287,240<sup>[2]</sup> </span><br/><span style='float:left'>Population Density:</span><span style='float:right'> 382/sqkm</span></div></div></p>",
+      "Population Density (/sqkm)": "<p><div style='width:95%'><div style='font-size:12px;width:200px;float:left'><span style='float:left'>Population:</span><span style='float:right'> 1,210,854,977 </span><br/><span style='float:left'>Area (sqkm):</span><span style='float:right'> 3,287,240<sup>[2]</sup> </span><br/><span style='float:left'>Population Density:</span><span style='float:right'> 382/sqkm</span></div></div></p>",
       
-      "Population Growth %": "<p><div style='width:95%%'><div style='font-size:12px;width:200px;float:left'><span style='float:left'>Population Growth:</span><span style='float:right'> 17.64 %%</span><br/><span style='float:left'>Population:</span><span style='float:right'> 1,210,854,977</span></div></div></p>",
+      "Population Growth %": "<p><div style='width:95%'><div style='font-size:12px;width:200px;float:left'><span style='float:left'>Population Growth(%):</span><span style='float:right'> 17.64</span><br/><span style='float:left'>Population:</span><span style='float:right'> 1,210,854,977</span></div></div></p>",
       
-      "Literacy Rate %": "<p><div style='width:95%%'><div style='font-size:12px;width:200px;float:left'><span style='float:left'>Literacy Rate:</span><span style='float:right'> 74.04 %</span><br/><span style='float:left'>Population:</span><span style='float:right'> 1,210,854,977</span><br/><span style='float:left'>Non-literate:</span><span style='float:right'> ~314,337,952</span></div></div></p>",
+      "Literacy Rate %": "<p><div style='width:95%'><div style='font-size:12px;width:200px;float:left'><span style='float:left'>Literacy Rate(%):</span><span style='float:right'> 74.04</span><br/><span style='float:left'>Population:</span><span style='float:right'> 1,210,854,977</span><br/><span style='float:left'>Non-literate:</span><span style='float:right'> ~314,337,952</span></div></div></p>",
       
-      "Gender Ratio": "<p><div style='font-size:12px;width:200px;float:left'><span style='font-size:12px;'>Gender Ratio: 943 f/1000m<br/><div style='width:95%%'><span style='float:left'>Males</span><span style='float:right'>Females</span><br/><span style='color:#2aa1ec;float:left'>52%%</span><span         style='color:#fe6a59;float:right'>48%%</span><br clear='all'/><span style='background:#2aa1ec;width:52%;float:left'>&nbsp;</span><span style='background:#fe6a59;width:48%;float:right'>&nbsp;</span><br clear='all'/><span style='float:left'>Males: </span><span style='float:right'>623,724,248</span><br/><span style='float:left'>Females: </span><span style='float:right'>586,469,174</span><br/><span style='float:left'>Difference: </span><span style='float:right'>37,255,074</span></div></div></p>",
+      "Gender Ratio": "<p><div style='font-size:12px;width:200px;float:left'><span style='font-size:12px;'>Gender Ratio: 943 f/1000m<br/><div style='width:95%'><span style='float:left'>Males</span><span style='float:right'>Females</span><br/><span style='color:#2aa1ec;float:left'>52%</span><span         style='color:#fe6a59;float:right'>48%</span><br clear='all'/><span style='background:#2aa1ec;width:52%;float:left'>&nbsp;</span><span style='background:#fe6a59;width:48%;float:right'>&nbsp;</span><br clear='all'/><span style='float:left'>Males: </span><span style='float:right'>623,724,248</span><br/><span style='float:left'>Females: </span><span style='float:right'>586,469,174</span><br/><span style='float:left'>Difference: </span><span style='float:right'>37,255,074</span></div></div></p>",
       
-      "Urban:Rural": "<p><div style='font-size:12px;width:200px;float:left'><span style='font-size:12px;'>Urban:Rural Ratio: 0.45<br/><div style='width:95%%'><span style='float:left'>Urban</span><span style='float:right'>Rural</span><br/><span style='color:#2aa1ec;float:left'>31%%</span><span style='color:#fe6a59;float:right'>69%%</span><br clear='all'/><span style='background:#2aa1ec;width:31%;float:left'>&nbsp;</span><span style='background:#fe6a59;width:69%;float:right'>&nbsp;</span><br clear='all'/><span style='float:left'>Urban Population: </span><span style='float:right'>377,105,760</span><br/><span style='float:left'>Rural Population: </span><span style='float:right'>833,087,662</span><br/><span style='float:left'>Total Population: </span><span style='float:right'>1,210,854,977</span></div></div></p>"
+      "Urban:Rural": "<p><div style='font-size:12px;width:200px;float:left'><span style='font-size:12px;'>Urban:Rural Ratio: 0.45<br/><div style='width:95%'><span style='float:left'>Urban</span><span style='float:right'>Rural</span><br/><span style='color:#2aa1ec;float:left'>31%</span><span style='color:#fe6a59;float:right'>69%</span><br clear='all'/><span style='background:#2aa1ec;width:31%;float:left'>&nbsp;</span><span style='background:#fe6a59;width:69%;float:right'>&nbsp;</span><br clear='all'/><span style='float:left'>Urban Population: </span><span style='float:right'>377,105,760</span><br/><span style='float:left'>Rural Population: </span><span style='float:right'>833,087,662</span><br/><span style='float:left'>Total Population: </span><span style='float:right'>1,210,854,977</span></div></div></p>"
     };
   
     result = lookup[val];
@@ -32,11 +32,11 @@ output: html_document
   }
 
   window.onload = function () {
-    document.getElementById("countryInfo").innerHTML = lookupCountryInfo("Population Density");
+    document.getElementById("countryInfo").innerHTML = lookupCountryInfo("Population Density (/sqkm)");
     descendents = document.getElementsByClassName('leaflet-control');
     for(var i=0; i<descendents.length; i++) {
       if(descendents[i].className == 'info legend leaflet-control') {
-        if (descendents[i].innerHTML.indexOf("Population Density") != -1) {
+        if (descendents[i].innerHTML.indexOf("Population Density (/sqkm)") != -1) {
           descendents[i].style.display = 'block';
         } else {
           descendents[i].style.display = 'none';
@@ -149,8 +149,8 @@ hoverlabelsPopG <- lapply(seq(nrow(states@data)), function(i) {
         "<div style='font-size:12px;width:200px;float:left'>
         <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/>
         <div style='width:95%%'>
-        <span style='float:left'>Population Growth:</span>
-        <span style='float:right'> %s %%</span><br/>
+        <span style='float:left'>Population Growth(%%):</span>
+        <span style='float:right'> %s</span><br/>
         <span style='float:left'>Population:</span>
         <span style='float:right'> %s</span><br/>
         </div>
@@ -171,8 +171,8 @@ hoverlabelsLit <- lapply(seq(nrow(states@data)), function(i) {
         "<div style='font-size:12px;width:200px;float:left'>
         <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/>
         <div style='width:95%%'>
-        <span style='float:left'>Literacy Rate:</span>
-        <span style='float:right'> %s %%</span><br/>
+        <span style='float:left'>Literacy Rate(%%):</span>
+        <span style='float:right'> %s</span><br/>
         <span style='float:left'>Population:</span>
         <span style='float:right'> %s</span><br/>
         <span style='float:left'>Non-literate:</span>
@@ -349,6 +349,9 @@ map <- leaflet(width = "100%") %>%
   addMiniMap(tiles = providers$Esri, toggleDisplay = T) %>% 
   addScaleBar() %>%
   addSimpleGraticule(showOriginLabel = T) %>%
+  addResetMapButton() %>%
+  addSearchOSM(options = search) %>%
+  addFullscreenControl() %>% 
   addLegend("bottomleft", pal = mapspalettePopD, values = plotSubset$`Density (per sqkm)`, title = "Population Density (/sqkm)", opacity = 1) %>%
   addLegend("bottomleft", pal = mapspalettePOPG, values = plotSubset$`Decadal Growth%(2001-2011)`, title = "Population Growth %", opacity = 1) %>%
   legendreverse("bottomleft", pal = mapspaletteLit, values = plotSubset$`Literacy Rate (%)`, title = "Literacy Rate %", opacity = 1, decreasing = T) %>% 
