@@ -1,10 +1,6 @@
 ---
 output:
-  html_document:
-    toc: true
-    toc_float:
-      collapsed: false
-      smooth_scroll: false
+  html_document
 ---
 
 <style>
@@ -35,6 +31,7 @@ map <- leaflet(width = "100%")  %>%
   addProviderTiles(providers$OpenTopoMap, options = tileOptions(minZoom=2, maxZoom=18), group = "Open Topological Map") %>%
   addProviderTiles(providers$Esri.WorldImagery, options = tileOptions(minZoom=2, maxZoom=18), group = "Sattelite Imagery by Esri") %>%
   addProviderTiles(providers$Stamen.TerrainBackground, options = tileOptions(minZoom=2, maxZoom=14), group = "Terrain by Stamen") %>%
+  addProviderTiles(providers$Stamen.TonerLabels, options = tileOptions(minZoom=2, maxZoom=14), group = "Sattelite Imagery by Esri") %>%
   addProviderTiles(providers$Stamen.TonerLabels, options = tileOptions(minZoom=2, maxZoom=14), group = "Toner Labels by Stamen") %>%
 
   addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
@@ -48,11 +45,15 @@ map <- leaflet(width = "100%")  %>%
 map
 ```
 
-##[Home](index.html)
-##[States of India](statesofindia.html)
-##[Districts of India](districtsofindia.html)
-##[Parliament Constituencies of India](parliamentconstituencies.html)
-##[India Rail Network](indianrailwaynetwork.html)
-##[Airports in India](indianairports.html)
-##[Statewise Population Info (2011 Census)](populationdata.html)
-##[Dustrictwise Population Info (2011 Census)](districtpopulation_2011.html)
+###[Districtwise Population Growth - Neonatal Mortality Rate comparison](districtNMRPopGrowth_2011.html)
+###[Districtwise Neonatal Mortality Rate](districtNMR-FM_2011.html)
+###[Districtwise Primary Health Care Centers](districthospitals_2011.html)
+###[Districtwise Population Growth vs Literacy Rate Comparison](districtpop-lit_2011.html)
+###[Districtwise Literacy Information](districtliteracy_2011.html)
+###[Districtwise Population Info (2011 Census)](districtpopulation_2011.html)
+###[Statewise Population Info (2011 Census)](populationdata.html)
+###[Airports in India](indianairports.html)
+###[India Rail Network](indianrailwaynetwork.html)
+###[Parliament Constituencies of India](parliamentconstituencies.html)
+###[Districts of India](districtsofindia.html)
+###[States of India](statesofindia.html)

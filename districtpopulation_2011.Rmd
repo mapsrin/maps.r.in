@@ -14,11 +14,11 @@ output: html_document
     var result = "";
 
     var lookup = {
-      "Population Density (/sqkm)": "<p><div style='width:95%%'><div style='font-size:12px;width:200px;float:left'><span style='float:left'>Population:</span><span style='float:right'> 1,210,854,977 </span><br/><span style='float:left'>Area (sqkm):</span><span style='float:right'> 3,287,240<sup>[2]</sup> </span><br/><span style='float:left'>Population Density:</span><span style='float:right'> 382/sqkm</span></div></div></p>",
+      "Population Density (/sqkm)": "<p><div style='width:95%%'><div style='font-size:12px;width:200px;float:left'><span style='float:left'>Population:</span><span style='float:right'> 1,210,854,977 </span><br/><span style='float:left'>Area (sqkm):</span><span style='float:right'> 3,287,240<sup>[2]</sup> </span><br/><span style='float:left'>Population Density(/sqkm):</span><span style='float:right'> 382</span></div></div></p>",
       
-      "Population Growth %": "<p><div style='width:95%%'><div style='font-size:12px;width:200px;float:left'><span style='float:left'>Population Growth:</span><span style='float:right'> 17.64 %%</span><br/><span style='float:left'>Population:</span><span style='float:right'> 1,210,854,977</span></div></div></p>",
+      "Population Growth %": "<p><div style='width:95'><div style='font-size:12px;width:200px;float:left'><span style='float:left'>Population Growth(%):</span><span style='float:right'> 17.64</span><br/><span style='float:left'>Population:</span><span style='float:right'> 1,210,854,977</span></div></div></p>",
       
-      "Gender Ratio": "<p><div style='font-size:12px;width:200px;float:left'><span style='font-size:12px;'>Gender Ratio: 943 f/1000m<br/><div style='width:95%%'><span style='float:left'>Males</span><span style='float:right'>Females</span><br/><span style='color:#2aa1ec;float:left'>52%%</span><span         style='color:#fe6a59;float:right'>48%%</span><br clear='all'/><span style='background:#2aa1ec;width:52%;float:left'>&nbsp;</span><span style='background:#fe6a59;width:48%;float:right'>&nbsp;</span><br clear='all'/><span style='float:left'>Males: </span><span style='float:right'>623,724,248</span><br/><span style='float:left'>Females: </span><span style='float:right'>586,469,174</span><br/><span style='float:left'>Difference: </span><span style='float:right'>37,255,074</span></div></div></p>"
+      "Gender Ratio (/1000)": "<p><div style='font-size:12px;width:200px;float:left'><span style='font-size:12px;'>Gender Ratio: 943 f/1000m<br/><div style='width:95%'><span style='float:left'>Males</span><span style='float:right'>Females</span><br/><span style='color:#2aa1ec;float:left'>52%</span><span         style='color:#fe6a59;float:right'>48%</span><br clear='all'/><span style='background:#2aa1ec;width:52%;float:left'>&nbsp;</span><span style='background:#fe6a59;width:48%;float:right'>&nbsp;</span><br clear='all'/><span style='float:left'>Males: </span><span style='float:right'>623,724,248</span><br/><span style='float:left'>Females: </span><span style='float:right'>586,469,174</span><br/><span style='float:left'>Difference: </span><span style='float:right'>37,255,074</span></div></div></p>"
     };
   
     result = lookup[val];
@@ -99,8 +99,8 @@ hoverlabelsPop <- lapply(seq(nrow(districts@data)), function(i) {
         <span style='float:right'> %s </span><br/>
         <span style='float:left'>Area (sqkm):</span>
         <span style='float:right'> %s </span><br/>
-        <span style='float:left'>Population Density:</span>
-        <span style='float:right'> %s /sqkm</span>
+        <span style='float:left'>Population Density(/sqkm):</span>
+        <span style='float:right'> %s </span>
         </div>
         </div>",
         districts@data$DISTRICT[i],
@@ -120,8 +120,8 @@ hoverlabelsPopG <- lapply(seq(nrow(districts@data)), function(i) {
         "<div style='font-size:12px;width:200px;float:left'>
         <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/>
         <div style='width:95%%'>
-        <span style='float:left'>Population Growth:</span>
-        <span style='float:right'> %s %%</span><br/>
+        <span style='float:left'>Population Growth(%%):</span>
+        <span style='float:right'> %s</span><br/>
         <span style='float:left'>Population:</span>
         <span style='float:right'> %s</span><br/>
         </div>
@@ -227,6 +227,9 @@ map <- leaflet(width = "100%") %>%
   addScaleBar() %>%
   leafem::addMouseCoordinates() %>%
   addSimpleGraticule(showOriginLabel = TRUE) %>%
+  addResetMapButton() %>%
+  addSearchOSM(options = search) %>%
+  addFullscreenControl() %>% 
   
   addLegend("bottomleft", pal = mapspalettePop, values = districts@data$Total.Population/districts@data$Area..sqkm., title = "Population Density (/sqkm)", opacity = 1, labFormat = function(type, cuts, p) {
   n = length(cuts)

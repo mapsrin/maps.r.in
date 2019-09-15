@@ -1,0 +1,308 @@
+---
+output: html_document
+---
+
+<style>
+    body .main-container {
+        max-width: 100%;
+        padding: 0;
+        margin: 0;
+    }
+    .legend-bivar {
+        padding: 2px;
+        font: 10px Arial, Helvetica, sans-serif;
+       background: white;
+       box-shadow: none;
+       border: black;
+       border: 2px solid rgba(0,0,0,0.2);
+       border-radius: 5px;
+       background-clip: padding-box;
+    }
+
+    .legend-bivar img{
+       margin: 0;
+    }
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE)
+```
+
+```{r, echo=FALSE, message=F, warning=F, results = 'hide'}
+options(java.parameters = "-Xmx4g" )
+library(XLConnect)
+library(sp)
+library(tabulizer)
+library(dplyr)
+library(tidyr)
+
+wb <- loadWorkbook("data/Demographics/DistrictwiseTotalPopulation.xlsx")
+populationData <- readWorksheet(wb, sheet = "HospitalCount", header = TRUE)
+populationData <- populationData[order(populationData$District),]
+populationData[nrow(populationData)+2,] <- NA
+
+nmrpdf <- 'data/Demographics/pone.0201125.s003.pdf'
+nmrTable <- extract_tables(nmrpdf)
+condensed <- nmrTable[[1]][,c(2,5,8)]
+colnames(condensed) <- c("Female NMR", "Male NMR", "Total NMR")
+for(i in 2:length(nmrTable)) {
+  condensed <- rbind(condensed,nmrTable[[i]][,c(2,6,10)])
+}
+condensed <- condensed[-c(1:4,645),]
+
+nmrdf <- data.frame(condensed)
+nmrdf[] <- lapply(nmrdf, function(x) as.numeric(as.character(x)))
+nmrdf[nrow(nmrdf)+2,] <- NA
+
+districts <- readRDS("data/IndiaAdminUnits/Districts_2011_simplified.rds")
+districts <- districts[order(as.numeric(districts$censuscode)),]
+
+districts@data <- cbind(districts@data,  populationData[,])
+districts@data <- cbind(districts@data,  nmrdf[,])
+
+var1 <- districts@data$Total.NMR
+var2 <- districts@data$Population.Growth..
+info1 <- districts@data$Total.NMR
+mainNames <- districts@data$DISTRICT
+```
+
+```{r, echo=FALSE, message=F, warning=F, results = 'hide'}
+round_percent <- function(x) { 
+  if(!any(is.na(x))) {
+    x <- x/sum(x)*100  # Standardize result
+    res <- floor(x)    # Find integer bits
+    rsum <- sum(res)   # Find out how much we are missing
+    if(rsum<100) { 
+        # Distribute points based on remainders and a random tie breaker
+        o <- order(x%%1, sample(length(x)), decreasing=TRUE) 
+        res[o[1:(100-rsum)]] <- res[o[1:(100-rsum)]]+1
+    } 
+    res 
+  }
+}
+
+hoverlabels <- lapply(seq(nrow(districts@data)), function(i) {
+  if (is.na(info1[i])) {
+    return(paste0('<p>', sprintf(
+        "<div style='font-size:12px;width:200px;float:left'>
+        <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/>",         mainNames[i])))
+  }
+  paste0( '<p>', sprintf(
+        "<div style='font-size:12px;width:200px;float:left'>
+        <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/>
+        <div style='width:95%%'>
+        <span style='float:left'>NMR (/1000):</span>
+        <span style='float:right'> %s </span><br/>
+        <span style='float:left'>Population Growth (%%):</span>
+        <span style='float:right'> %s </span>
+        </div>
+        </div>",
+        mainNames[i],
+        var1 [i],
+        var2 [i]
+      ), '</p>' ) 
+})
+
+```
+## {.tabset}
+### India, Population Growth vs Neonatal Mortality Rate^[1]^
+
+<div class = "col-md-8">
+<div class = "row">
+```{r, echo=F, warning=F, message=F}
+library(leaflet)
+library(ggmap)
+library(raster)
+
+mapspaletteVar1 <- colorQuantile(
+  palette = c("#EDEDED", "#FF94C0", "#FF2C54"),
+  domain = var1,
+  probs = seq(0, 1, length.out = 4)
+)
+
+mapspaletteVar2 <- colorQuantile(
+  palette = c("#EDEDED", "#94C6E7", "#4CB1DF"),
+  domain = var2,
+  probs = seq(0, 1, length.out = 4)
+)
+
+legend_scale <- data.frame(
+  legVar1 = c(rep(1, 3), rep(2, 3), rep(3, 3)),
+  legVar2 = c(rep(seq(1, 3, 1), 3)),
+  color = c("#F1F1F1", "#C3DEEE", "#A1D3EA",
+            "#F7DBE7", "#CAC8E3", "#A6BDDF",
+            "#F7C1CB", "#CAAEC8", "#A6A3C4")
+)
+
+legend <- ggplot() +
+  geom_tile(
+    data = legend_scale,
+    aes(x = legVar1, y = legVar2, fill = color)
+  ) +
+  scale_fill_identity() +
+  labs(x = "Low \U2192 High\n NMR (/1000)", 
+       y = "Population Growth (%)\nLow \U2192 High") +
+  theme(
+    axis.title = element_text(size = 20),
+    axis.line = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid = element_blank(),
+    panel.background = element_blank(),
+    plot.title = element_text(hjust = 0.5),
+    plot.margin = margin(10, 10, 10, 10),
+    plot.background = element_rect(fill = "transparent", color = NA)
+  )
+
+# # save SVG legend
+ggsave("data/img/districtsPopGrNMRLegend.svg", plot = legend,
+       width = 4, height = 4, bg = "transparent")
+```
+
+```{r, echo=FALSE, message=F, warning=F}
+library(leaflet.extras)
+library(leaflet.minicharts)
+library(htmltools)
+library(htmlwidgets)
+library(legendreverse)
+
+map <- leaflet(width = "100%") %>% 
+  addProviderTiles("Esri") %>%
+  leafem::addMouseCoordinates() %>% 
+  
+  addPolygons(data = districts,
+              color = "#000000", 
+              weight = .50, smoothFactor = 0.5,
+              opacity = 1.0, fillOpacity = 0.5,
+              dashArray = "3",
+              fillColor =  ~mapspaletteVar1(var1),
+              highlightOptions = highlightOptions(color = "white", weight = 2),
+              group = "Var1") %>%
+  
+  addPolygons(data = districts,
+              color = "#000000", 
+              weight = .50, smoothFactor = 0.5,
+              opacity = 1.0, fillOpacity = 0.5,
+              dashArray = "3",
+              fillColor =  ~mapspaletteVar2(var2),
+              label = lapply(hoverlabels, htmltools::HTML),
+              highlightOptions = highlightOptions(color = "white", weight = 2),
+              group = "Var2") %>%
+  
+  addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
+  addScaleBar() %>%
+  leafem::addMouseCoordinates() %>%
+  addSimpleGraticule(showOriginLabel = TRUE) %>%
+  addResetMapButton() %>%
+  addSearchOSM(options = search) %>%
+  addFullscreenControl() %>% 
+  
+  addControl(
+    "<img src = 'data/img/districtsPopGrNMRLegend.svg' width = '128' height = '128'>",
+    position = "bottomleft",
+    className = "legend-bivar"
+  ) %>%
+
+htmlwidgets::onRender("
+    function(el, x) {
+      var myMap = this;
+      myMap.on('baselayerchange',
+        function (e) {
+          e.layer.bringToBack();
+          document.getElementById('countryInfo').innerHTML = lookupCountryInfo(e.name);
+        })
+
+      myMap.on('tooltipopen',
+        function (e) {
+          document.getElementById('districtInfo').innerHTML = e.tooltip._content;
+          $('.leaflet-tooltip').css('display','none');
+        })
+
+      myMap.on('tooltipclose',
+        function (e) {
+          document.getElementById('districtInfo').innerHTML = '';
+        })
+    }")
+
+map
+
+```
+<font size='1'>*2011 data and boundaries<br/>
+Sources:<br/>
+[1] http://www.censusindia.gov.in/2011census/population_enumeration.html <br/>
+[2] https://en.wikipedia.org/wiki/List_of_districts_in_India <br/>
+[3] https://data.gov.in/catalog/district-wise-availability-health-centres-india-0
+</font>
+</div>
+</div>
+<div class = "col-md-3">
+<div class = "row"  style = "margin-left: 10px">
+<h2><b>India</b></h2>
+<div id = "countryInfo"><p><div style='width:95%%'><div style='font-size:12px;width:200px;float:left'><span style='float:left'>Total NMR (/1000):</span><span style='float:right'> 30.5</span><br/><span style='float:left'>Population Growth (%):</span><span style='float:right'> 9.21</span><br/><br/></div></div></p>
+</div>
+<div id = "districtInfo">
+</div>
+</div>
+</div>
+
+### Plots
+```{r, echo=F, message=F, warning=F}
+library(pals)
+library(classInt)
+library(plotly)
+cols <- stevens.pinkgreen; nbins <- 3
+
+brksVar1 <- classIntervals(var1, n=nbins, style='quantile')
+brksVar2 <- classIntervals(var2, n=nbins, style='quantile')
+classVar1 <- findCols(brksVar1)
+classVar2 <- findCols(brksVar2)
+fit <- lm(var2 ~ var1, na.action = na.exclude)
+pVal <- round(summary(fit)$coefficients[,4],2)
+r2Val <- round(summary(fit)$r.squared,2)
+rp = paste("<i>p=</i>",pVal,"<br><i>R<sup>2</sup>=</i>",r2Val)
+
+# convert x,y classes into a joint class x+3(y-1)
+districts@data$colorCode <- classVar1 + nbins*(classVar2-1)
+
+bcColors <- c("#e8e8e8","#dfb0d6","#be64ac","#ace4e4","#a5add3","#8c62aa","#5ac8c8","#5698b9","#3b4994") 
+
+# scatterplot of two variates showing bins
+plot_ly() %>% add_trace(data=districts@data, x = ~var1, y = ~var2, type="scatter", mode="markers", color = ~colorCode, colors = bcColors, text = ~paste(mainNames, ",",districts@data$State...UT,"\nNMR (%): ",var1, "\nPopulation Growth (%): ", var2), hoverinfo="text")  %>%
+add_lines(data=districts@data, x = ~var1, y = fitted(fit)) %>%
+add_lines(x = ~var1, y = brksVar2$brks[2], line = list(color = "grey", width = 0.25, dash = "dot")) %>%
+add_lines(x = ~var1, y = brksVar2$brks[3], line = list(color = "grey", width = 0.25, dash = "dot")) %>%
+add_lines(x = brksVar1$brks[2], y = ~var2, line = list(color = "grey", width = 0.25, dash = "dot")) %>%
+add_lines(x = brksVar1$brks[3], y = ~var2, line = list(color = "grey", width = 0.25, dash = "dot")) %>%
+layout(margin=list(t = 75), title = "Neonatal Mortality Rate (/1000) vs Population Growth (%)", xaxis = list(title = "NMR (/1000)"), yaxis = list(title = "Population Growth (%)")) %>% 
+add_annotations(text = c("[33rd]","[66th]"),  x = c(brksVar1$brks[2],brksVar1$brks[3]), y=1, showarrow=F,textangle=-90, valign="top", yref="paper", xanchor="right", yanchor="top") %>%
+add_annotations(text = c("[33rd]","[66th]"),  x = 1, y=c(brksVar2$brks[2],brksVar2$brks[3]), showarrow=F, valign="top", xref="paper", xanchor="right", yanchor="bottom") %>%
+add_annotations(text = rp, showarrow=F, x=1, y=1, xref="paper", yref="paper",xanchor="right", yanchor="top") %>%
+hide_colorbar() %>%  layout(showlegend = F)
+```
+<font size='1'>
+*2011 data and boundaries<br/>
+Sources:<br/>
+[1] http://www.censusindia.gov.in/2011census/population_enumeration.html <br/>
+[2] https://en.wikipedia.org/wiki/List_of_districts_in_India <br/>
+</font>
+
+### Data
+
+```{r}
+library(DT)
+populationData <- cbind(populationData,nmrdf)
+populationData <- populationData[order(-populationData$Total.Population),]
+populationData <- populationData[-c(641,642),-c(1,5:12,14,16)]
+col2cnvrt2 <- c(2:4) #because !#$@# columnDefs indexes from 0
+datatable(populationData, rownames = FALSE, options = list(pageLength = 100, columnDefs = list(list(className = 'dt-right', targets = col2cnvrt2)))) %>% formatCurrency(3, '', digits = 0)
+
+```
+
+Source: <br/>
+[1]http://www.censusindia.gov.in/2011census/population_enumeration.html<br/>
+[2]https://data.gov.in/catalog/district-wise-availability-health-centres-india-0
+
+### Info
+```{r}
+sessionInfo()
+```

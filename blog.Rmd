@@ -8,10 +8,15 @@ output:
       smooth_scroll: false
 ---
 
-##[States of India](statesofindia.html)
-##[Districts of India](districtsofindia.html)
-##[Parliament Constituencies of India](parliamentconstituencies.html)
-##[India Rail Network](indianrailwaynetwork.html)
-##[Airports in India](indianairports.html)
-##[Statewise Population Info (2011 Census)](populationdata.html)
-##[Dustrictwise Population Info (2011 Census)](districtpopulation_2011.html)
+###[Districtwise Population Growth - Neonatal Mortality Rate comparison](districtNMRPopGrowth_2011.html)
+###[Districtwise Neonatal Mortality Rate](districtNMR-FM_2011.html)
+###[Districtwise Primary Health Care Centers](districthospitals_2011.html)
+###[Districtwise Population Growth vs Literacy Rate Comparison](districtpop-lit_2011.html)
+###[Districtwise Literacy Information](districtliteracy_2011.html)
+###[Districtwise Population Info (2011 Census)](districtpopulation_2011.html)
+###[Statewise Population Info (2011 Census)](populationdata.html)
+###[Airports in India](indianairports.html)
+###[India Rail Network](indianrailwaynetwork.html)
+###[Parliament Constituencies of India](parliamentconstituencies.html)
+###[Districts of India](districtsofindia.html)
+###[States of India](statesofindia.html)

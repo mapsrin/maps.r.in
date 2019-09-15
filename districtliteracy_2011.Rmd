@@ -9,21 +9,9 @@ output: html_document
         margin: 0;
     }
 </style>
-<script>
-  function lookupCountryInfo(val) {
-    var result = "";
 
-    var lookup = {
-      
-      "Literacy Rate %": "<p><div style='width:95%%'><div style='font-size:12px;width:200px;float:left'><span style='float:left'>Literacy Rate:</span><span style='float:right'> 74.04 %</span><br/><span style='float:left'>Population:</span><span style='float:right'> 1,210,854,977</span><br/><span style='float:left'>Non-literate:</span><span style='float:right'> ~314,337,952</span></div></div></p>",
-  
-    result = lookup[val];
-  
-    return result;
-  }
-  
+<script>
   window.onload = function () {
-    document.getElementById("countryInfo").innerHTML = lookupCountryInfo("Literacy Rate %");
     descendents = document.getElementsByClassName('leaflet-control');
     for(var i=0; i<descendents.length; i++) {
       if(descendents[i].className == 'info legend leaflet-control') {
@@ -91,12 +79,18 @@ hoverlabelsLit <- lapply(seq(nrow(districts@data)), function(i) {
         "<div style='font-size:12px;width:200px;float:left'>
         <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/>
         <div style='width:95%%'>
-        <span style='float:left'>Literacy Rate:</span>
-        <span style='float:right'> %s (%%)</span><br/>
+        <span style='float:left'>Population:</span>
+        <span style='float:right'> %s </span><br/>
+        <span style='float:left'>Literacy Rate (%%):</span>
+        <span style='float:right'> %s </span><br/>
+        <span style='float:left'>Non-Literates:</span>
+        <span style='float:right'>&asymp;%s </span><br/>
         </div>
         </div>",
         districts@data$DISTRICT[i],
-        districts@data$Literacy.Rate..[i]
+        districts@data$Total.Population[i],
+        districts@data$Literacy.Rate..[i],
+        format((100.0 - districts@data$Literacy.Rate..[i])*districts@data$Total.Population[i], big.mark=",")
       ), '</p>' ) 
 })
 
@@ -131,6 +125,9 @@ map <- leaflet(width = "100%") %>%
   addScaleBar() %>%
   leafem::addMouseCoordinates() %>%
   addSimpleGraticule(showOriginLabel = TRUE) %>%
+  addResetMapButton() %>%
+  addSearchOSM(options = search) %>%
+  addFullscreenControl() %>% 
 
   legendreverse("bottomleft", pal = mapspaletteLit, values = districts@data$Literacy.Rate.., title = "Literacy Rate %", opacity = 1, decreasing = T) %>%
   
@@ -186,6 +183,7 @@ Sources:<br/>
 <div class = "row"  style = "margin-left: 10px">
 <h2><b>India</b></h2>
 <div id = "countryInfo">
+<p><div style='width:95%%'><div style='font-size:12px;width:200px;float:left'><span style='float:left'>Literacy Rate:</span><span style='float:right'> 74.04 %</span><br/><span style='float:left'>Population:</span><span style='float:right'> 1,210,854,977</span><br/><span style='float:left'>Non-literate:</span><span style='float:right'> &asymp;314,337,952</span></div></div></p>
 </div>
 <div id = "districtInfo">
 </div>
