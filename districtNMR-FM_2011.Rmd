@@ -266,7 +266,7 @@ districts@data$colorCode <- classVar1 + nbins*(classVar2-1)
 bcColors <- c("#e8e8e8","#dfb0d6","#be64ac","#ace4e4","#a5add3","#8c62aa","#5ac8c8","#5698b9","#3b4994") 
 
 # scatterplot of two variates showing bins
-plot_ly() %>% add_trace(data=districts@data, x = ~var1, y = ~var2, type="scatter", mode="markers", color = ~colorCode, colors = bcColors, text = ~paste(mainNames, ",",districts@data$State...UT,"\nFemale NMR (/1000): ",var1, "\nMale NMR (/1000): ", var2))  %>%
+plot_ly() %>% add_trace(data=districts@data, x = ~var1, y = ~var2, type="scatter", mode="markers", color = ~colorCode, colors = bcColors, text = ~paste(mainNames, ",",districts@data$State...UT,"\nFemale NMR (/1000): ",var1, "\nMale NMR (/1000): ", var2), hoverinfo = "text")  %>%
 add_lines(x = ~var1, y = brksVar2$brks[2], line = list(color = "grey", width = 0.25, dash = "dot")) %>%
 add_lines(x = ~var1, y = brksVar2$brks[3], line = list(color = "grey", width = 0.25, dash = "dot")) %>%
 add_lines(x = brksVar1$brks[2], y = ~var2, line = list(color = "grey", width = 0.25, dash = "dot")) %>%

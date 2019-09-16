@@ -254,7 +254,7 @@ districts@data$colorCode <- classVar1 + nbins*(classVar2-1)
 bcColors <- c("#e8e8e8","#dfb0d6","#be64ac","#ace4e4","#a5add3","#8c62aa","#5ac8c8","#5698b9","#3b4994") 
 
 # scatterplot of two variates showing bins
-plot_ly() %>% add_trace(data=districts@data, x = ~var1, y = ~var2, type="scatter", mode="markers", color = ~colorCode, colors = bcColors, text = ~paste(mainNames, ",",districts@data$State...UT,"\nLiteracy Rate (%): ",var1, "\nPopulation Growth (%): ", var2))  %>%
+plot_ly() %>% add_trace(data=districts@data, x = ~var1, y = ~var2, type="scatter", mode="markers", color = ~colorCode, colors = bcColors, text = ~paste(mainNames, ",",districts@data$State...UT,"\nLiteracy Rate (%): ",var1, "\nPopulation Growth (%): ", var2), hoverinfo = "text")  %>%
 layout(margin=list(t = 75), title = "Population Growth - Literacy correlation", xaxis = list(title = "Literacy Rate (%)", range = c(30,100)), yaxis = list(title = "Decadal Population Growth (%)")) %>%
 add_lines(data=districts@data, x = ~var1, y = fitted(fit)) %>%
 add_lines(x = 74.04, y = ~var2, line = list(color = "red", width = 0.25, dash = "dot")) %>%
