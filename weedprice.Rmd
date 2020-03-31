@@ -21,7 +21,7 @@ output: html_document
       
       "Legal Enforcement": "<p></p>",
       
-      "Social Acceptability": "<p></p>"
+      "Social Acceptance": "<p></p>"
     };
   
     result = lookup[val];
@@ -296,8 +296,7 @@ htmlwidgets::onRender("
 ```
 <font size="1">*2011 Census and State/UT boundaries<br/>
 Source: <br/>
-[1]https://en.wikipedia.org/wiki/Demographics_of_India<br/>
-[2]https://en.wikipedia.org/wiki/Geography_of_India
+[1]https://www.priceofweed.com<br/>
 </font>
 </div>
 </div>
@@ -319,7 +318,7 @@ library(DT)
 ```
 <font size="1">
 Source: 
-[1]https://en.wikipedia.org/wiki/Demographics_of_India</font>
+[1]https://www.priceofweed.com</font>
 
 ### Info
 ```{r}

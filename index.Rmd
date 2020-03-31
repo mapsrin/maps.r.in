@@ -57,3 +57,4 @@ map
 ###[Parliament Constituencies of India](parliamentconstituencies.html)
 ###[Districts of India](districtsofindia.html)
 ###[States of India](statesofindia.html)
+###[Price of Weed in States of India](weedprice.html)
