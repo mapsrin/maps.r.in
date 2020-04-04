@@ -16,12 +16,12 @@ knitr::opts_chunk$set(echo = FALSE)
 
 
 ```{r, echo=FALSE, message=F, warning=F, results = 'hide'}
-library("leaflet")
-library("rgdal")
-library("ggmap")
-library("raster")
-library("sp")
-library("htmlwidgets")
+library(leaflet)
+library(rgdal)
+library(ggmap)
+library(raster)
+library(sp)
+library(htmlwidgets)
 library(rvest)
 library(tidyverse)
 
@@ -82,7 +82,7 @@ vals[3] <- data.frame(lapply(vals[3], function(x) {gsub("an eighth", "3.54", x)}
 vals[3] <- data.frame(lapply(vals[3], function(x) {gsub("20 grams", "20", x)}))
 vals[3] <- data.frame(lapply(vals[3], function(x) {gsub("15 grams", "15", x)}))
 vals[3] <- data.frame(lapply(vals[3], function(x) {as.numeric(as.character(x))}))
-vals <- transform(vals, "Per gram" = X2 / X3)
+vals <- transform(vals, "Per gram" = round(X2 / X3, digits = 2))
 vals <- vals[-c(1),-c(2,3,5)]
 vals <- vals %>% filter(vals[2] != "<NA>")
 vals <- vals %>% filter(vals[3] < 500)
@@ -110,54 +110,56 @@ valsQAgnos["lng"] <- lapply(valsQAgnos[1], function(x) latlng[match(x, latlng$V1
 ```{r, echo=FALSE, warning=F}
 valshighQUniq$levels <- cut(valshighQUniq$avg, 
                         c(0,100), include.lowest = F, include.highest = F)
-levelColhighQ <- colorFactor(palette = c("#FF0000"), valshighQUniq$levels)
+levelColhighQ <- colorFactor(palette = c("#00FF00"), valshighQUniq$levels)
 valsmedQUniq$levels <- cut(valsmedQUniq$avg, 
                         c(0,100), include.lowest = F, include.highest = F)
-levelColmedQ <- colorFactor(palette = c("#FF0000"), valsmedQUniq$levels)
+levelColmedQ <- colorFactor(palette = c("#00FF00"), valsmedQUniq$levels)
 valsQAgnos$levels <- cut(valsQAgnos$avg, 
                         c(0,100), include.lowest = F, include.highest = F)
-levelColQAgnos <- colorFactor(palette = c("#FF0000"), valsQAgnos$levels)
+levelColQAgnos <- colorFactor(palette = c("#00FF00"), valsQAgnos$levels)
 
 map <- leaflet(width = "100%") %>% 
   addProviderTiles("Esri") %>%
   addMiniMap(tiles = providers$Esri, toggleDisplay = TRUE) %>% 
   addScaleBar() %>%
   addSimpleGraticule(showOriginLabel = TRUE) %>%
-  
+
+  addCircleMarkers(data = valsQAgnos, lat = ~lat, lng = ~lng,
+                       color = ~levelColQAgnos(levels),
+                       radius = ~sqrt(avg), group = 'Quality Agnostic*', 
+                   label = paste0(valsQAgnos$X1, " ", round(valsQAgnos$avg, digits = 2), "/gm")) %>%
+    
   addCircleMarkers(data = valshighQUniq, lat = ~lat, lng = ~lng,
-                       color = ~levelColhighQ(levels), popup = paste0("<strong>Place: </strong>",
-                             valshighQUniq$X1,
-                             "<br><strong>Price/gm: </strong>",
-                             valshighQUniq$avg),
-                       radius = ~sqrt(avg), group = 'High Quality') %>%
+                       color = ~levelColhighQ(levels),
+                       radius = ~sqrt(avg), group = 'High Quality', 
+                   label = paste0(valshighQUniq$X1, " ", round(valshighQUniq$avg, digits = 2), "/gm")) %>%
   
   addCircleMarkers(data = valsmedQUniq, lat = ~lat, lng = ~lng,
-                       color = ~levelColmedQ(levels), popup = paste0("<strong>Place: </strong>",
-                             valsmedQUniq$X1,
-                             "<br><strong>Price/gm: </strong>",
-                             valsmedQUniq$avg),
-                       radius = ~sqrt(avg), group = 'Medium Quality') %>%
+                       color = ~levelColmedQ(levels),
+                       radius = ~sqrt(avg), group = 'Medium Quality', 
+                   label = paste0(valsmedQUniq$X1, " ", round(valsmedQUniq$avg, digits = 2), "/gm")) %>%
   
-  addCircleMarkers(data = valsQAgnos, lat = ~lat, lng = ~lng,
-                       color = ~levelColQAgnos(levels), popup = paste0("<strong>Place: </strong>",
-                             valsQAgnos$X1,
-                             "<br><strong>Price/gm: </strong>",
-                             valsQAgnos$avg),
-                       radius = ~sqrt(avg), group = 'Quality Agnostic') %>%
   
   addLayersControl(
-    baseGroups = c("High Quality", "Medium Quality", "Quality Agnostic"),
+    baseGroups = c("Quality Agnostic*", "High Quality", "Medium Quality"),
     options = layersControlOptions(collapsed = FALSE)
   )
 map
 ```
+<font size="1">
+*Because quality is subjective<br/>
+Source: <br/>
+[1]http://www.priceofweed.com<br/>
+</font>
 
 ### Data
 
 ```{r, echo=FALSE, warning=F}
 library(DT)
-
+datatable(data.frame(vals), rownames = F, colnames = c("Place", "Quality", "Price/gm"), options = list(pageLength = 100))
 ```
 
 ### Info
-Data source: OurAirports.org
+```{r}
+sessionInfo()
+```
