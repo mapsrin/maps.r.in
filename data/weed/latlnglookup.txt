@@ -1,0 +1,104 @@
+"Hyderabad, Andhra Pradesh"	17.25778	78.45328
+"Gudlavalleru, Andhra Pradesh"	16.34837	81.04604
+"Vizag, Andhra Pradesh"	17.68291	83.23929
+"Kurnool, Andhra Pradesh"	15.83371	78.03266
+"Kondapur, Andhra Pradesh"	14.77355	78.19346
+"Guwahati, Assam"	26.18264	91.75185
+"Silchar, Assam"	24.83034	92.78679
+"Arunachal, Arunachal"	28.413	94.32859
+"Muzaffarpur, Bihar"	26.12231	85.37801
+"Patna, Bihar"	25.5941	85.1376
+"Chandigarh, Chandigarh"	30.69931	76.79033
+"Raipur, Chhattisgarh"	21.2514	81.6296
+"Bhilai, Chhattisgarh"	21.20134	81.33435
+"Durg, Chhattisgarh"	21.19716	81.3009
+"Silvassa, Dadra and Nagar Haveli"	20.27386	72.99673
+"New Delhi, New Delhi"	28.57016	77.16218
+"Nangloi Jat, New Delhi"	28.67957	77.06799
+"Varca, Goa"	15.2235	73.93143
+"Panaji, Goa"	15.49671	73.8838
+"Cola, Goa"	15.0779	73.9654
+"Calangute, Goa"	15.54568	73.76472
+"Dona Paula, Goa"	15.45588	73.80431
+"Chicalim, Goa"	15.39835	73.84216
+"Ahmedabad, Gujarat"	23.02814	72.50161
+"Vadodara, Gujarat"	22.31836	73.17783
+"Surat, Gujarat"	21.1702	72.8311
+"Rajkot, Gujarat"	22.31221	70.80345
+"Navsari, Gujarat"	20.94685	72.91429
+"Valsad, Gujarat"	20.60856	72.93353
+"Gurgaon, Haryana"	28.48916	77.01074
+"Jind, Haryana"	29.32888	76.28962
+"Sirsa, Haryana"	29.5321	75.0318
+"Haryana, Haryana"	28.64792	76.24378
+"Faridabad, Haryana"	28.41147	77.30735
+"Hissar, Haryana"	29.1492	75.7217
+"Karnal, Haryana"	29.6857	76.9905
+"Sonipat, Haryana"	28.98942	77.01734
+"Mandi, Himachal Pradesh"	31.5892	76.9182
+"Bhawan, Himachal Pradesh"	31.2901	77.2742
+"Arki, Himachal Pradesh"	31.1521	76.9686
+"Shimla, Himachal Pradesh"	31.1048	77.1734
+"Kangri, Himachal Pradesh"	32.0998	76.2691
+"Manali, Himachal Pradesh"	32.2432	77.1892
+"Solon, Himachal Pradesh"	30.9084	77.0999
+"Jammu, Jammu and Kashmir"	32.57197	75.021
+"Jamshedpur, Jharkhand"	22.8046	86.2029
+"Anjan, Jharkhand"	23.13	84.47
+"Ranchi, Jharkhand"	23.3441	85.3096
+"Dhanbad, Jharkhand"	23.79097	86.42896
+"Bangalore, Karnataka"	13	77.58333
+"Manipal, Karnataka"	13.35466	74.79094
+"Palakkad, Kerala"	10.7867	76.6548
+"Thiruvananthapuram, Kerala"	8.60399	76.98574
+"Pathanamthitta, Kerala"	9.28068	76.86967
+"Ernakulam, Kerala"	9.99361	76.28619
+"Kottayam, Kerala"	9.59418	76.53217
+"Tiruvalla, Kerala"	9.39215	76.58027
+"Shoranur, Kerala"	10.75987	76.271
+"Idukki, Kerala"	9.85	76.96667
+"Cochin, Kerala"	9.96687	76.26117
+"Calicut, Kerala"	11.1339	75.89401
+"Indore, Madhya Pradesh"	22.71757	75.86843
+"Jabalpur, Madhya Pradesh"	23.1815	79.9864
+"Bhopal, Madhya Pradesh"	23.20253	77.45591
+"Guna, Madhya Pradesh"	24.6405	77.3141
+"Nasik, Maharashtra"	19.9975	73.7898
+"Pune, Maharashtra"	18.53507	73.88298
+"Mumbai, Maharashtra"	19.06191	72.84054
+"Nagpur, Maharashtra"	21.1458	79.0882
+"Amravati, Maharashtra"	20.90214	77.73243
+"Imphal, Manipur"	24.8170	93.9368
+"Shillong, Meghalaya"	25.7036	91.9787
+"Aizawl, Mizoram"	23.83788	92.62024
+"Kohima, Nagaland"	25.75	94.16667
+"Bhubaneshwar, Orissa"	20.27241	85.83385
+"Raurkela, Orissa"	22.22496	84.86414
+"Bhubaneswar, Orissa"	20.38218	85.83519
+"Pondicherry, Puducherry"	11.91667	79.75
+"Ludhiana, Punjab"	30.91237	75.84787
+"Patiala, Punjab"	30.34114	76.37906
+"Sangrur, Punjab"	30.24379	75.83052
+"Amritsar, Punjab"	31.6186	74.90878
+"Jalandhar, Punjab"	31.30624	75.63211
+"Hoshiarpur, Punjab"	31.66	75.85
+"Batala, Punjab"	31.85691	75.22849
+"Chennai, Tamil Nadu"	13.01644	80.20488
+"Erode, Tamil Nadu"	11.32768	77.72593
+"Vellore, Tamil Nadu"	12.92365	79.12521
+"Kanniyakumari, Tamil Nadu"	8.09008	77.53841
+"Selam, Tamil Nadu"	11.9135	78.69176
+"Allahabad, Uttar Pradesh"	25.4358	81.8463
+"Lucknow, Uttar Pradesh"	26.79451	80.87314
+"Ghaziabad, Uttar Pradesh"	28.66535	77.43915
+"Hapur, Uttar Pradesh"	28.73133	77.77305
+"Gorakhpur, Uttar Pradesh"	26.75931	83.3815
+"Agra, Uttar Pradesh"	27.1767	78.0081
+"Meerut, Uttar Pradesh"	29.016	77.68694
+"Dehra Dun, Uttarakhand"	30.32443	78.03392
+"Garhwal, Uttarakhand"	29.64495	79.57673
+"Kolkata, West Bengal"	22.5726	88.3639
+"Howrah, West Bengal"	22.58333	88.35
+"Kharagpur, West Bengal"	22.34143	87.32846
+"Durgapur, West Bengal"	22.30887	88.39934
+"Nadia, West Bengal"	23.25	88.5

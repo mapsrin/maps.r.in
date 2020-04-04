@@ -1,0 +1,327 @@
+---
+output: html_document
+---
+
+<style>
+    body .main-container {
+        max-width: 100%;
+        padding: 0;
+        margin: 0;
+    }
+</style>
+
+<script>
+  function lookupCountryInfo(val) {
+    var result = "";
+
+    var lookup = {
+      "High Quality": "<p></p>",
+      
+      "Medium Quality": "<p></p>",
+      
+      "Legal Enforcement": "<p></p>",
+      
+      "Social Acceptance": "<p></p>"
+    };
+  
+    result = lookup[val];
+  
+    return result;
+  }
+
+  window.onload = function () {
+    document.getElementById("countryInfo").innerHTML = lookupCountryInfo("High Quality");
+    descendents = document.getElementsByClassName('leaflet-control');
+    for(var i=0; i<descendents.length; i++) {
+      if(descendents[i].className == 'info legend leaflet-control') {
+        if (descendents[i].innerHTML.indexOf("High Quality") != -1) {
+          descendents[i].style.display = 'block';
+        } else {
+          descendents[i].style.display = 'none';
+        }
+      }
+    }
+  }
+</script>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+```{r, echo=FALSE, message=F, warning=F, results = 'hide'}
+library(leaflet)
+library(leaflet.extras)
+library(leaflet.minicharts)
+library(rgdal)
+library(RCurl)
+library(XML)
+library(tidyverse)
+library(ggmap)
+library(raster)
+library(sp)
+library(htmltools)
+library(htmlwidgets)
+library(legendreverse)
+library(data.table)
+library(rvest)
+
+states <- readRDS("data/IndiaAdminUnits/States_2011_simplified_1.rds")
+states <- states[order(as.numeric(states$ID_1)),]
+centroids <- getSpPPolygonsLabptSlots(states)
+states[['Centroids']] <- centroids
+
+dat <- read.csv("data/weed/StateNames.txt", header = F)
+#print(data)
+
+
+#Specifying the url for desired website to be scraped
+baseurl <- 'http://www.priceofweed.com/prices/India/'
+
+get_page_data <- function(url) {
+  print(url)
+  medQAv <- url
+  tryCatch({
+    medQAv <- xml2::read_html(medQAv) %>%
+      html_nodes(xpath='//*[@id="contentdt"]/table[1]') %>%
+      html_table(fill = T)
+    
+    hiVals <- medQAv[[1]]$X2[2]
+    medVals <- medQAv[[1]]$X2[3]
+    
+    return(c(hiVals,medVals))
+    
+  }, warning = function(w) {
+    return(c(NA,NA))
+  }, error = function(e) {
+    return(c(NA,NA))
+  }
+  )
+}
+
+vals <- c()
+
+for(i in dat$V1){
+  #Reading the HTML code from the website
+  url <- paste0(baseurl,i,".html")
+  vals <- rbind(vals,get_page_data(url))
+}
+
+valsbak <- vals
+vals[,] <- gsub("\\$","",vals[,])
+vals[,] <- gsub("N\\/A","NA",vals[,])
+
+vals <- cbind(as.numeric(vals[,1]), as.numeric(vals[,2]))
+# vals <- c(NA,232.77,NA,3.40,240.00,36.05,106.39,800.00,NA,239.80,77.65,317.22,385.57,102.08,100.00,NA,175.19,144.57,NA,20.00,398.31,NA,NA,352.27,852.27,28571.43,NA,308.14,NA,NA,179.79,NA,153.75,222.05,312.29,NA)
+# vals <- cbind(vals,c(115.00,106.89,NA,54.45,142.05,156.02,NA,284.09,NA,237.95,100.33,204.92,134.01,120.00,NA,2.25,144.66,81.33,NA,116.71,150.60,1428.57,285.71,2130.68,NA,4.50,56.82,446.17,NA,NA,176.05,NA,136.29,8.50,84.03,NA))
+LE <- c(NA,3,NA,2,1,4,5,3,NA,3,3,3,3,4,3,2,3,4,NA,2,3,4,5,1,NA,4,NA,4,NA,NA,3,NA,3,2,3,NA)
+SA <- c(NA,3,NA,3,4,2,1,3,NA,3,3,3,3,3,2,4,3,2,NA,3,3,1,3,2,NA,2,NA,2,NA,NA,2,NA,3,2,3,NA)
+
+colnames(vals) <- c("High Quality","Medium Quality")
+
+states[["High Quality"]] <- as.numeric(vals[,1])
+states[["Medium Quality"]] <- as.numeric(vals[,2])
+states[["Legal Enforcement"]] <- as.numeric(LE)
+states[["Social Acceptance"]] <- as.numeric(SA)
+
+#states@data <- cbind(states@data,  vals[,])
+
+plotSubset <- subset(states, states$`High Quality` < 5000)
+
+
+#Hover content
+hoverlabelsPopD <- lapply(seq(nrow(states@data)), function(i) {
+  if (is.na(states@data[i, "High Quality"])) {
+    return(paste0('<p>', sprintf(
+        "<div style='font-size:12px;width:200px;float:left'>
+        <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/>",states@data[i, "State...UT"])))
+  }
+  paste0( '<p>', sprintf(
+        "<div style='font-size:12px;width:200px;float:left'>
+        <hr><span style='font-size:12px;font-weight:bold'>%s</span><br/>
+        <div style='width:95%%'>
+        <span style='float:left'>High Quality:</span>
+        <span style='float:right'> %s</span><br/>
+        <span style='float:left'>Medium Quality:</span>
+        <span style='float:right'> %s</span><br/>
+        <span style='float:left'>Legal Enforcement (on a scale of 5):</span>
+        <span style='float:right'> %s</span><br/>
+        <span style='float:left'>Social Acceptance (on a scale of 5):</span>
+        <span style='float:right'> %s</span>
+        </div>
+        </div>",
+        states@data[i, "State...UT"],
+        states@data[i, "High Quality"],
+        states@data[i, "Medium Quality"],
+        states@data[i, "Legal Enforcement"], 
+        states@data[i, "Social Acceptance"]
+      ), '</p>' ) 
+})
+
+
+```
+
+## {.tabset}
+### Price of Weed^[1]^
+
+<div class = "col-md-8">
+<div class = "row">
+```{r, echo=FALSE, warning=F}
+mapspalettePopD <- colorQuantile(
+  palette = "YlOrRd",
+  domain = states@data$`High Quality`, n = 7, right = TRUE
+)
+
+mapspalettePOPG <- colorQuantile(
+  palette = "YlOrRd",
+  domain = states@data$`Medium Quality`, n = 7, right = TRUE
+)
+
+mapspaletteLE <- colorNumeric(
+  palette = "YlOrRd",
+  na.color = "#808080",
+  domain = c(NA,1,2,3,4,5)
+)
+
+mapspaletteSA <- colorNumeric(
+  palette = "YlOrRd",
+  na.color = "#808080",
+  domain = c(NA,1,2,3,4,5)
+)
+
+map <- leaflet(width = "100%") %>% 
+  addProviderTiles("Esri") %>%
+  leafem::addMouseCoordinates() %>% 
+  
+  addPolygons(data = states,
+              color = "#000000", 
+              weight = 1, smoothFactor = 0.5,
+              opacity = 1.0, fillOpacity = 0.8,
+              dashArray = "3",
+              fillColor = ~mapspalettePopD(states$`High Quality`),
+              label = lapply(hoverlabelsPopD, htmltools::HTML),
+              highlightOptions = highlightOptions(color = "white", weight = 2),
+              group = "High Quality") %>%
+  
+  addPolygons(data = states,
+              color = "#000000", 
+              weight = 1, smoothFactor = 0.5,
+              opacity = 1.0, fillOpacity = 0.8,
+              dashArray = "3",
+              fillColor = ~mapspalettePOPG(states$`Medium Quality`),
+              label = lapply(hoverlabelsPopD, htmltools::HTML),
+              highlightOptions = highlightOptions(color = "white", weight = 2),
+              group = "Medium Quality") %>%
+  
+  addPolygons(data = states,
+              color = "#000000", 
+              weight = 1, smoothFactor = 0.5,
+              opacity = 1.0, fillOpacity = 0.8,
+              dashArray = "3",
+              fillColor = ~mapspaletteLE(states$`Legal Enforcement`),
+              label = lapply(hoverlabelsPopD, htmltools::HTML),
+              highlightOptions = highlightOptions(color = "white", weight = 2),
+              group = "Legal Enforcement") %>%
+  
+  addPolygons(data = states,
+              color = "#000000", 
+              weight = 1, smoothFactor = 0.5,
+              opacity = 1.0, fillOpacity = 0.8,
+              dashArray = "3",
+              fillColor = ~mapspaletteSA(states$`Social Acceptance`),
+              label = lapply(hoverlabelsPopD, htmltools::HTML),
+              highlightOptions = highlightOptions(color = "white", weight = 2),
+              group = "Social Acceptance") %>%
+  
+  addMiniMap(tiles = providers$Esri, toggleDisplay = T) %>% 
+  addScaleBar() %>%
+  addSimpleGraticule(showOriginLabel = T) %>%
+  addResetMapButton() %>%
+  addSearchOSM(options = search) %>%
+  addFullscreenControl() %>% 
+  addLegend("bottomleft", pal = mapspalettePopD, values = states$`High Quality`, title = "High Quality", opacity = 1, labFormat = function(type, cuts, p) {
+  n = length(cuts)
+  p = paste0(round(p * 100), '%')
+  cuts = paste0(round(cuts[-1],0))}) %>%
+  addLegend("bottomleft", pal = mapspalettePOPG, values = states$`Medium Quality`, title = "Medium Quality", opacity = 1, labFormat = function(type, cuts, p) {
+  n = length(cuts)
+  p = paste0(round(p * 100), '%')
+  cuts = paste0(round(cuts[-1],0))}) %>%
+  addLegend("bottomleft", pal = mapspaletteLE, values = c(NA, 1,2,3,4,5), title = "Legal Enforcement", opacity = 1, bins =5) %>%
+  addLegend("bottomleft", pal = mapspaletteSA, values = c(NA, 1,2,3,4,5), title = "Social Acceptance", opacity = 1, bins = 5) %>%
+  
+htmlwidgets::onRender("
+    function(el, x) {
+      var myMap = this;
+      myMap.on('baselayerchange',
+        function (e) {
+          document.getElementById('countryInfo').innerHTML = lookupCountryInfo(e.name);
+          descendents = document.getElementsByClassName('leaflet-control')
+          for(var i=0; i<descendents.length; i++) {
+            if(descendents[i].className == 'info legend leaflet-control') {
+              if (descendents[i].innerHTML.indexOf(e.name) != -1) {
+                descendents[i].style.display = 'block';
+              } else {
+                descendents[i].style.display = 'none';
+              }
+            }
+          }
+        })
+
+      myMap.on('tooltipopen',
+        function (e) {
+          document.getElementById('stateInfo').innerHTML = e.tooltip._content;
+          $('.leaflet-tooltip').css('display','none');
+        })
+
+      myMap.on('tooltipclose',
+        function (e) {
+          document.getElementById('stateInfo').innerHTML = '';
+        })
+    }") %>% 
+  
+  addLayersControl(
+    baseGroups = c("High Quality", "Medium Quality", "Legal Enforcement", "Social Acceptance"),
+    options = layersControlOptions(collapsed = F)
+  )
+
+
+
+  # leafem::addHomeButton(ext = bbox([]))
+
+  css_fix <- "div.info.legend.leaflet-control br {clear: both;}"
+  map <- map %>% prependContent(tags$style(type = "text/css", css_fix))  
+
+  map
+  
+```
+<font size="1">*2011 Census and State/UT boundaries<br/>
+Source: <br/>
+[1]https://www.priceofweed.com<br/>
+</font>
+</div>
+</div>
+<div class = "col-md-3">
+<div class = "row"  style = "margin-left: 10px">
+<h2><b>India</b></h2></br>
+<div id = "countryInfo">
+</div><br>
+<div id = "stateInfo">
+</div>
+</div>
+</div>
+
+### Data^[1]^
+
+```{r}
+library(DT)
+
+```
+<font size="1">
+Source: 
+[1]https://www.priceofweed.com</font>
+
+### Info
+```{r}
+sessionInfo()
+```

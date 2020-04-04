@@ -1,0 +1,104 @@
+Hyderabad, Andhra Pradesh
+Gudlavalleru, Andhra Pradesh
+Vizag, Andhra Pradesh
+Kurnool, Andhra Pradesh
+Kondapur, Andhra Pradesh
+Guwahati, Assam
+Silchar, Assam
+Arunachal, Assam
+Muzaffarpur, Bihar
+Patna, Bihar
+Chandigarh, Chandigarh
+Raipur, Chhattisgarh
+Bhilai, Chhattisgarh
+Durg, Chhattisgarh
+Silvassa, Dadra and Nagar Haveli
+New Delhi, New Delhi
+Nangloi Jat, New Delhi
+Varca, Goa
+Panaji, Goa
+Cola, Goa
+Calangute, Goa
+Dona Paula, Goa
+Chicalim, Goa
+Ahmedabad, Gujarat
+Vadodara, Gujarat
+Surat, Gujarat
+Rajkot, Gujarat
+Navsari, Gujarat
+Valsad, Gujarat
+Gurgaon, Haryana
+Jind, Haryana
+Sirsa, Haryana
+Haryana, Haryana
+Faridabad, Haryana
+Hissar, Haryana
+Karnal, Haryana
+Sonipat, Haryana
+Mandi, Himachal Pradesh
+Bhawan, Himachal Pradesh
+Arki, Himachal Pradesh
+Shimla, Himachal Pradesh
+Kangri, Himachal Pradesh
+Manali, Himachal Pradesh
+Solon, Himachal Pradesh
+Jammu, Jammu and Kashmir
+Jamshedpur, Jharkhand
+Anjan, Jharkhand
+Ranchi, Jharkhand
+Dhanbad, Jharkhand
+Bangalore, Karnataka
+Manipal, Karnataka
+Palakkad, Kerala
+Thiruvananthapuram, Kerala
+Pathanamthitta, Kerala
+Ernakulam, Kerala
+Kottayam, Kerala
+Tiruvalla, Kerala
+Shoranur, Kerala
+Idukki, Kerala
+Cochin, Kerala
+Calicut, Kerala
+Indore, Madhya Pradesh
+Jabalpur, Madhya Pradesh
+Bhopal, Madhya Pradesh
+Guna, Madhya Pradesh
+Nasik, Maharashtra
+Pune, Maharashtra
+Mumbai, Maharashtra
+Nagpur, Maharashtra
+Amravati, Maharashtra
+Imphal, Manipur
+Shillong, Meghalaya
+Aizawl, Mizoram
+Kohima, Nagaland
+Bhubaneshwar, Orissa
+Raurkela, Orissa
+Bhubaneswar, Orissa
+Pondicherry, Puducherry
+Ludhiana, Punjab
+Patiala, Punjab
+Sangrur, Punjab
+Amritsar, Punjab
+Jalandhar, Punjab
+Hoshiarpur, Punjab
+Batala, Punjab
+Chennai, Tamil Nadu
+Erode, Tamil Nadu
+Vellore, Tamil Nadu
+Kanniyakumari, Tamil Nadu
+Selam, Tamil Nadu
+Allahabad, Uttar Pradesh
+Lucknow, Uttar Pradesh
+Ghaziabad, Uttar Pradesh
+Hapur, Uttar Pradesh
+Gorakhpur, Uttar Pradesh
+Agra, Uttar Pradesh
+Meerut, Uttar Pradesh
+Dehra Dun, Uttarakhand
+Garhwal, Uttarakhand
+Kolkata, West Bengal
+Howrah, West Bengal
+Kharagpur, West Bengal
+Durgapur, West Bengal
+Nadia, West Bengal
